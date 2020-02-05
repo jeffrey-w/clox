@@ -20,6 +20,7 @@ static void runtimeError(const char* format, ...);
 
 void initVM() {
 	resetStack();
+	vm.objects = NULL;
 }
 
 void resetStack() {
@@ -27,7 +28,7 @@ void resetStack() {
 }
 
 void freeVM() {
-
+	freeObjects();
 }
 
 InterpretResult interpret(const char* source) {
