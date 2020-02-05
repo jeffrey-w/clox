@@ -13,7 +13,7 @@ static Obj* allocateObject(size_t size, ObjType type);
 static ObjString* allocateString(char* data, int length);
 
 void printObject(Value value) {
-	switch (value.type) {
+	switch (OBJ_TYPE(value)) {
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(value));
 	default:

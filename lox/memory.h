@@ -5,7 +5,7 @@
 #define DEFAULT_CAPACITY 8
 
 #define ALLOCATE(type, count) \
-	(type*)reallocate(NULL, 0, sizeof(type), (count));
+	(type*)reallocate(NULL, 0, sizeof(type) * (count));
 
 #define FREE(type, pointer) \
 	reallocate(pointer, sizeof(type), 0);
