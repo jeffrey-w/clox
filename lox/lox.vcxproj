@@ -153,6 +153,7 @@
     <ClInclude Include="compiler.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="memory.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="scanner.h" />
     <ClInclude Include="value.h" />
     <ClInclude Include="vm.h" />
