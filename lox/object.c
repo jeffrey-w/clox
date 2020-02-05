@@ -28,6 +28,10 @@ ObjString* copyString(const char* string, int length) {
 	return allocateString(data, length);
 }
 
+ObjString* takeString(char* string, int length) {
+	return allocateString(string, length);
+}
+
 Obj* allocateObject(size_t size, ObjType type) {
 	Obj* object = (Obj*)reallocate(NULL, 0, size);
 	object->type = type;
