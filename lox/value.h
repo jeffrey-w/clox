@@ -22,6 +22,7 @@ typedef enum {
 } ValueType;
 
 typedef struct sObj Obj;
+typedef struct sObjString ObjString;
 
 typedef struct {
 	ValueType type;

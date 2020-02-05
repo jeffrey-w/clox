@@ -12,3 +12,9 @@ typedef enum {
 struct sObj {
 	ObjType type;
 };
+
+struct sObjString {
+	Obj obj;
+	int length;
+	char* data;
+};
