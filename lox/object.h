@@ -17,10 +17,10 @@ struct sObj {
 	struct sObj* next;
 };
 
-struct sObjString {
+struct sObjString { // TODO take 'const' strings from source
 	Obj obj;
 	int length;
-	char* data;
+	char* data; // TODO implement as flexible array member
 };
 
 void printObject(Value value);

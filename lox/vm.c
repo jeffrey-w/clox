@@ -106,7 +106,7 @@ InterpretResult run() {
 				double a = AS_NUMBER(pop());
 				push(NUMBER_VAL(a + b));
 			}
-			else {
+			else { // TODO if one argument is a string, stringify and concatenate the other
 				runtimeError("Operands must be two numbers or two strings.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
