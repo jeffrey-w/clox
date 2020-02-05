@@ -1,16 +1,20 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
+#include "object.h"
 #include "value.h"
 #include "vm.h"
 
 static InterpretResult run();
 static void resetStack();
 static Value peek(int distance);
+static void concatenate();
 static bool isFalsey(Value value);
 static void runtimeError(const char* format, ...);
 
@@ -93,7 +97,18 @@ InterpretResult run() {
 			BINARY_OP(BOOL_VAL, < );
 			break;
 		case OP_ADD:
-			BINARY_OP(NUMBER_VAL, +);
+			if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+				concatenate();
+			}
+			else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+				double b = AS_NUMBER(pop());
+				double a = AS_NUMBER(pop());
+				push(NUMBER_VAL(a + b));
+			}
+			else {
+				runtimeError("Operands must be two numbers or two strings.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
 			break;
 		case OP_SUBTRACT:
 			BINARY_OP(NUMBER_VAL, -);
@@ -135,6 +150,18 @@ Value pop() {
 
 Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
+}
+
+void concatenate() {
+	ObjString* b = AS_STRING(pop());
+	ObjString* a = AS_STRING(pop());
+	int length = a->length + b->length;
+	char* data = ALLOCATE(char, length + 1);
+	memcpy(data, a->data, a->length);
+	memcpy(data + a->length, b->data, b->length);
+	data[length] = '\0';
+	ObjString* string = takeString(data, length);
+	return push(OBJ_VAL(string));
 }
 
 bool isFalsey(Value value) {
