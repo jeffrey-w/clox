@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "object.h"
 
 static void advance();
 static void consume(TokenType type, const char* message);
@@ -13,6 +14,7 @@ static void parsePrecedence(Precedence precedence);
 static ParseRule* getRule(TokenType type);
 static void literal();
 static void number();
+static void string();
 static void unary();
 static void binary();
 static void grouping();
@@ -48,7 +50,7 @@ ParseRule rules[] = {
   { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS            
   { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS_EQUAL      
   { NULL,     NULL,    PREC_NONE },       // TOKEN_IDENTIFIER      
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_STRING          
+  { string,   NULL,    PREC_NONE },       // TOKEN_STRING          
   { number,   NULL,    PREC_NONE },       // TOKEN_NUMBER          
   { NULL,     NULL,    PREC_NONE },       // TOKEN_AND             
   { NULL,     NULL,    PREC_NONE },       // TOKEN_CLASS           
@@ -143,6 +145,10 @@ void literal() {
 void number() {
 	double value = strtod(parser.previous.start, NULL);
 	emitConstant(NUMBER_VAL(value));
+}
+
+void string() {
+	emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
 void unary() {
