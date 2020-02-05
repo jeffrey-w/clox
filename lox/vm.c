@@ -180,7 +180,7 @@ void runtimeError(const char* format, ...) {
 	va_end(args);
 	fputs("\n", stderr);
 	size_t instruction = vm.ip - vm.chunk->code;
-	int line = vm.chunk->lines[instruction];
+	int line = vm.chunk->lines[instruction]; // TODO prints wrong line number if running from repl
 	fprintf(stderr, "[line %d] in script\n", line);
 	resetStack();
 }
