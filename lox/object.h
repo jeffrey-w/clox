@@ -6,7 +6,7 @@
 #define OBJ_TYPE(value)         (AS_OBJ(value)->type)
 #define IS_STRING(value)        isObjType(value, OBJ_STRING)
 #define AS_STRING(value)        ((ObjString*)AS_OBJ(value))         
-#define AS_CSTRING(value)       (AS_STRING(value)->chars)
+#define AS_CSTRING(value)       (AS_STRING(value)->data)
 
 typedef enum {
 	OBJ_STRING
@@ -22,6 +22,7 @@ struct sObjString {
 	char* data;
 };
 
+void printObject(Value value);
 ObjString* copyString(const char* string, int length);
 
 static inline bool isObjectType(Value value, ObjType type) {
