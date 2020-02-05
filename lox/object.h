@@ -4,6 +4,7 @@
 #include "value.h"
 
 #define OBJ_TYPE(value)         (AS_OBJ(value)->type)
+#define IS_STRING(value)        isObjType(value, OBJ_STRING)
 
 typedef enum {
 	OBJ_STRING
@@ -18,3 +19,7 @@ struct sObjString {
 	int length;
 	char* data;
 };
+
+static inline bool isObjectType(Value value, ObjType type) {
+	return IS_OBJ(value) && AS_OBJ(value)->type == type;
+}
