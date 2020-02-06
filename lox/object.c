@@ -10,7 +10,8 @@
 	(type*)allocateObject(sizeof(type), objectType);
 
 static Obj* allocateObject(size_t size, ObjType type);
-static ObjString* allocateString(char* data, int length);
+static ObjString* allocateString(char* data, int length, uint32_t hash);
+static uint32_t hashString(const char* key, int length);
 
 void printObject(Value value) {
 	switch (OBJ_TYPE(value)) {
@@ -22,14 +23,25 @@ void printObject(Value value) {
 }
 
 ObjString* copyString(const char* string, int length) {
+	uint32_t hash = hashString(string, length);
 	char* data = ALLOCATE(char, length + 1);
 	memcpy(data, string, length);
 	data[length] = '\0';
-	return allocateString(data, length);
+	return allocateString(data, length, hash);
 }
 
 ObjString* takeString(char* string, int length) {
-	return allocateString(string, length);
+	uint32_t hash = hashString(string, length);
+	return allocateString(string, length, hash);
+}
+
+uint32_t hashString(const char* key, int length) { // TODO avoid magic contants
+	uint32_t hash = 2166136261u;
+	for (int i = 0; i < length; i++) {
+		hash ^= key[i];
+		hash *= 16777619;
+	}
+	return hash;
 }
 
 Obj* allocateObject(size_t size, ObjType type) {
