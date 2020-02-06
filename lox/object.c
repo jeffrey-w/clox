@@ -40,9 +40,10 @@ Obj* allocateObject(size_t size, ObjType type) {
 	return object;
 }
 
-ObjString* allocateString(char* data, int length) {
+ObjString* allocateString(char* data, int length, uint32_t hash) {
 	ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
 	string->length = length;
 	string->data = data;
+	string->hash = hash;
 	return string;
 }
