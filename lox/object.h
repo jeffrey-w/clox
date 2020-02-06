@@ -21,6 +21,7 @@ struct sObjString { // TODO take 'const' strings from source
 	Obj obj;
 	int length;
 	char* data; // TODO implement as flexible array member
+	uint32_t hash;
 };
 
 void printObject(Value value);
