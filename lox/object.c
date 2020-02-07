@@ -6,6 +6,9 @@
 #include "value.h"
 #include "vm.h"
 
+#define INITIAL_HASH 2166136261u
+#define HASH_SCALE 16777619
+
 #define ALLOCATE_OBJ(type, objectType) \
 	(type*)allocateObject(sizeof(type), objectType);
 
@@ -35,11 +38,11 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
-uint32_t hashString(const char* key, int length) { // TODO avoid magic contants
-	uint32_t hash = 2166136261u;
+uint32_t hashString(const char* key, int length) {
+	uint32_t hash = INITIAL_HASH;
 	for (int i = 0; i < length; i++) {
 		hash ^= key[i];
-		hash *= 16777619;
+		hash *= HASH_SCALE;
 	}
 	return hash;
 }
