@@ -37,6 +37,15 @@ bool tableSet(Table* table, ObjString* key, Value value) {
 	return isNewKey;
 }
 
+void tableAddAll(Table* from, Table* to) {
+	for (int i = 0; i < from->capacity; i++) {
+		Entry* entry = &from->entries[i];
+		if (entry->key) {
+			tableSet(to, entry->key, entry->value);
+		}
+	}
+}
+
 void adjustCapacity(Table* table, int capacity) {
 	Entry* entries = ALLOCATE(Entry, capacity);
 	for (int i = 0; i < capacity; i++) {
