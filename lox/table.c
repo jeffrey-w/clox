@@ -22,6 +22,18 @@ void freeTable(Table* table) {
 	initTable(table);
 }
 
+bool tableGet(Table* table, ObjString* key, Value* value) {
+	if (table->count == 0) {
+		return false;
+	}
+	Entry* entry = findEntry(table->entries, table->capacity, key);
+	if (!entry->key) {
+		return false;
+	}
+	*value = entry->value;
+	return true;
+}
+
 bool tableSet(Table* table, ObjString* key, Value value) {
 	if (table->capacity * TABLE_MAX_LOAD < table->count + 1) {
 		int capcity = GROW_CAPACITY(table->capacity);
