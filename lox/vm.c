@@ -20,6 +20,7 @@ static void runtimeError(const char* format, ...);
 
 void initVM() {
 	resetStack();
+	initTable(&vm.strings);
 	vm.objects = NULL;
 }
 
@@ -28,6 +29,7 @@ void resetStack() {
 }
 
 void freeVM() {
+	freeTable(&vm.strings);
 	freeObjects();
 }
 
