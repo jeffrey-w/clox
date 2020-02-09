@@ -10,9 +10,14 @@
 static void advance();
 static void consume(TokenType type, const char* message);
 static void declaration();
+static void varDeclaration();
+static uint8_t parseVariable(const char* errorMessage);
+static uint8_t identifierConstant(Token* name);
+static void defineVariable(uint8_t global);
 static void statement();
 static void printStatement();
 static void expressionStatement();
+static void synchronize();
 static bool match(TokenType type);
 static bool check(TokenType type);
 static void expression();
@@ -111,7 +116,40 @@ void consume(TokenType type, const char* message) {
 }
 
 void declaration() {
-	statement();
+	if (match(TOKEN_VAR)) {
+		varDeclaration();
+	}
+	else {
+		statement();
+	}
+	if (parser.panicMode) {
+		synchronize();
+	}
+}
+
+void varDeclaration() {
+	uint8_t global = parseVariable("Expect variable name.");
+	if (match(TOKEN_EQUAL)) {
+		expression();
+	}
+	else {
+		emitByte(OP_NIL);
+	}
+	consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+	defineVariable(global);
+}
+
+uint8_t parseVariable(const char* errorMessage) {
+	consume(TOKEN_IDENTIFIER, errorMessage);
+	return identifierConstant(&parser.previous);
+}
+
+uint8_t identifierConstant(Token* name) {
+	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+void defineVariable(uint8_t global) {
+	emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
 void statement() {
@@ -135,6 +173,27 @@ void expressionStatement() {
 	emitByte(OP_POP);
 }
 
+void synchronize() {
+	parser.panicMode = false;
+	while (parser.current.type != TOKEN_EOF) {
+		if (parser.previous.type == TOKEN_SEMICOLON) {
+			return;
+		}
+		switch (parser.current.type) {
+		case TOKEN_CLASS:
+		case TOKEN_FUN:
+		case TOKEN_VAR:
+		case TOKEN_FOR:
+		case TOKEN_IF:
+		case TOKEN_WHILE:
+		case TOKEN_PRINT:
+		case TOKEN_RETURN:
+			return;
+		}
+		advance();
+	}
+}
+
 bool match(TokenType type) {
 	if (!check(type)) {
 		return false;
@@ -150,6 +209,7 @@ bool check(TokenType type) {
 void expression() {
 	parsePrecedence(PREC_ASSIGNMENT);
 }
+
 
 void parsePrecedence(Precedence precedence) {
 	advance();
