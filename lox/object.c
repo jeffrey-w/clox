@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 
@@ -27,6 +28,10 @@ void printObject(Value value) {
 
 ObjString* copyString(const char* string, int length) {
 	uint32_t hash = hashString(string, length);
+	ObjString* interned = tableFrindString(&vm.strings, string, length, hash);
+	if (interned) {
+		return interned;
+	}
 	char* data = ALLOCATE(char, length + 1);
 	memcpy(data, string, length);
 	data[length] = '\0';
@@ -35,6 +40,11 @@ ObjString* copyString(const char* string, int length) {
 
 ObjString* takeString(char* string, int length) {
 	uint32_t hash = hashString(string, length);
+	ObjString* interned = tableFind(&vm.strings, string, length, hash);
+	if (interned) {
+		FREE_ARRAY(char, string, length + 1);
+		return interned;
+	}
 	return allocateString(string, length, hash);
 }
 
@@ -60,5 +70,6 @@ ObjString* allocateString(char* data, int length, uint32_t hash) {
 	string->length = length;
 	string->data = data;
 	string->hash = hash;
+	tableSet(&vm.strings, string, NIL_VAL);
 	return string;
 }
