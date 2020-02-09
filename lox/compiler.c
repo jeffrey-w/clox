@@ -12,6 +12,7 @@ static void consume(TokenType type, const char* message);
 static void declaration();
 static void statement();
 static void printStatement();
+static void expressionStatement();
 static bool match(TokenType type);
 static bool check(TokenType type);
 static void expression();
@@ -117,12 +118,21 @@ void statement() {
 	if (match(TOKEN_PRINT)) {
 		printStatement();
 	}
+	else {
+		expressionStatement();
+	}
 }
 
 void printStatement() {
 	expression();
 	consume(TOKEN_SEMICOLON, "Expect ';' after value.");
 	emitByte(OP_PRINT);
+}
+
+void expressionStatement() {
+	expression();
+	consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
+	emitByte(OP_POP);
 }
 
 bool match(TokenType type) {
