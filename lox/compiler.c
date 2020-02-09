@@ -23,14 +23,14 @@ static bool check(TokenType type);
 static void expression();
 static void parsePrecedence(Precedence precedence);
 static ParseRule* getRule(TokenType type);
-static void literal();
-static void number();
-static void string();
-static void unary();
-static void binary();
-static void grouping();
-static void variable();
-static void namedVariable(Token name);
+static void literal(bool canAssign);
+static void number(bool canAssign);
+static void string(bool canAssign);
+static void unary(bool canAssign);
+static void binary(bool canAssign);
+static void grouping(bool canAssign);
+static void variable(bool canAssign);
+static void namedVariable(Token name, bool canAssign);
 static void emitByte(uint8_t byte);
 static void emitBytes(uint8_t one, uint8_t two);
 static void emitConstant(Value value);
@@ -146,7 +146,7 @@ uint8_t parseVariable(const char* errorMessage) {
 	return identifierConstant(&parser.previous);
 }
 
-uint8_t identifierConstant(Token* name) {
+uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
 	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
@@ -220,11 +220,15 @@ void parsePrecedence(Precedence precedence) {
 		error("Expect expression.");
 		return;
 	}
-	prefixRule();
+	bool canAssign = precedence <= PREC_ASSIGNMENT;
+	prefixRule(canAssign);
 	while (precedence <= getRule(parser.current.type)->precedence) {
 		advance();
 		ParseFn infixRule = getRule(parser.previous.type)->infix;
-		infixRule();
+		infixRule(canAssign);
+	}
+	if (canAssign && match(TOKEN_EQUAL)) {
+		error("Invalid assignment target.");
 	}
 }
 
@@ -232,7 +236,7 @@ ParseRule* getRule(TokenType type) {
 	return &rules[type];
 }
 
-void literal() {
+void literal(bool canAssign) {
 	switch (parser.previous.type) {
 	case TOKEN_FALSE:
 		emitByte(OP_FALSE);
@@ -248,16 +252,16 @@ void literal() {
 	}
 }
 
-void number() {
+void number(bool canAssign) {
 	double value = strtod(parser.previous.start, NULL);
 	emitConstant(NUMBER_VAL(value));
 }
 
-void string() {
+void string(bool canAssign) {
 	emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
-void unary() {
+void unary(bool canAssign) {
 	TokenType operatorType = parser.previous.type;
 	parsePrecedence(PREC_UNARY);
 	switch (operatorType) {
@@ -272,7 +276,7 @@ void unary() {
 	}
 }
 
-void binary() {
+void binary(bool canAssign) {
 	TokenType operatorType = parser.previous.type;
 	ParseRule* rule = getRule(operatorType);
 	parsePrecedence((Precedence)(rule->precedence + 1));
@@ -312,18 +316,18 @@ void binary() {
 	}
 }
 
-void grouping() {
+void grouping(bool canAssign) {
 	expression();
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-void variable() {
-	namedVariable(parser.previous);
+void variable(bool canAssign) {
+	namedVariable(parser.previous, canAssign);
 }
 
-void namedVariable(Token name) {
+void namedVariable(Token name, bool canAssign) {
 	uint8_t arg = identifierConstant(&name);
-	if (match(TOKEN_EQUAL)) {
+	if (canAssign && match(TOKEN_EQUAL)) {
 		expression();
 		emitBytes(OP_SET_GLOBAL, arg);
 	}
@@ -385,7 +389,7 @@ void errorAt(Token* token, const char* message) {
 		return;
 	}
 	parser.panicMode = true;
-	fprintf(stderr, "[line %d] Error", token->line);
+	fprintf(stderr, "[line %d] Error", token->line); // TODO prints wrong line number if running 
 	if (token->type == TOKEN_EOF) {
 		fprintf(stderr, " at end");
 	}
