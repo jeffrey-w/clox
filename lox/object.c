@@ -28,7 +28,7 @@ void printObject(Value value) {
 
 ObjString* copyString(const char* string, int length) {
 	uint32_t hash = hashString(string, length);
-	ObjString* interned = tableFrindString(&vm.strings, string, length, hash);
+	ObjString* interned = tableFindString(&vm.strings, string, length, hash);
 	if (interned) {
 		return interned;
 	}
@@ -40,7 +40,7 @@ ObjString* copyString(const char* string, int length) {
 
 ObjString* takeString(char* string, int length) {
 	uint32_t hash = hashString(string, length);
-	ObjString* interned = tableFind(&vm.strings, string, length, hash);
+	ObjString* interned = tableFindString(&vm.strings, string, length, hash);
 	if (interned) {
 		FREE_ARRAY(char, string, length + 1);
 		return interned;
