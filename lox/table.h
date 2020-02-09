@@ -4,7 +4,7 @@
 #include "value.h"
 
 typedef struct {
-	ObjString* key;
+	ObjString* key; // TODO support generic keys
 	Value value;
 } Entry;
 
