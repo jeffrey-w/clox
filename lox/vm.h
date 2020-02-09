@@ -17,6 +17,7 @@ typedef struct {
 	uint8_t* ip;
 	Value stack[STACK_MAX]; // TODO need to handle stack overflow
 	Value* stackTop;
+	Table globals;
 	Table strings;
 	Obj* objects;
 } VM;
