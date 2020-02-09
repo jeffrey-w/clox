@@ -71,6 +71,25 @@ void tableAddAll(Table* from, Table* to) {
 	}
 }
 
+ObjString* tableFindString(Table* table, const char* string, int length, uint32_t hash) {
+	if (!table->count) {
+		return NULL;
+	}
+	uint32_t index = hash & (table->capacity - 1);
+	while (true) {
+		Entry* entry = &table->entries[index];
+		if (!entry->key) {
+			if (IS_NIL(entry->value)) {
+				return NULL;
+			}
+		}
+		else if (entry->key->length == length && entry->key->hash == hash && !memcmp(string, entry->key->data, length)) {
+			return entry->key;
+		}
+		index = (index + 1) & (table->capacity - 1);
+	}
+}
+
 void adjustCapacity(Table* table, int capacity) {
 	Entry* entries = ALLOCATE(Entry, capacity);
 	for (int i = 0; i < capacity; i++) {
