@@ -198,7 +198,7 @@ void concatenate() {
 	memcpy(data + a->length, b->data, b->length);
 	data[length] = '\0';
 	ObjString* string = takeString(data, length);
-	return push(OBJ_VAL(string));
+	push(OBJ_VAL(string));
 }
 
 bool isFalsey(Value value) {
