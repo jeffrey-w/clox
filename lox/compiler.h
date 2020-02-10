@@ -31,6 +31,12 @@ typedef struct {
 	bool panicMode;
 } Parser;
 
+typedef struct {
+    Local local[UINT8_COUNT];
+    int localCount;
+    int scopeDepth;
+} Compiler;
+
 Parser parser;
 Chunk* compilingChunk;
 
