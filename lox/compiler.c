@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "object.h"
 
+static void initComplier(Compiler*);
 static void advance();
 static void consume(TokenType, const char*);
 static void declaration();
@@ -16,6 +17,9 @@ static uint8_t identifierConstant(Token*);
 static void defineVariable(uint8_t);
 static void statement();
 static void printStatement();
+static void block();
+static void beginScope();
+static void endScope();
 static void expressionStatement();
 static void synchronize();
 static bool match(TokenType);
@@ -86,7 +90,9 @@ ParseRule rules[] = {
 };
 
 bool compile(const char* source, Chunk* chunk) {
+	Compiler compiler;
 	initScanner(source);
+	initComplier(&compiler);
 	parser.hadError = false;
 	parser.panicMode = false;
 	compilingChunk = chunk;
@@ -96,6 +102,12 @@ bool compile(const char* source, Chunk* chunk) {
 	}
 	endCompiler();
 	return !parser.hadError;
+}
+
+void initComplier(Compiler* compiler) {
+	compiler->localCount = 0;
+	compiler->scopeDepth = 0;
+	current = compiler;
 }
 
 void advance() {
@@ -158,6 +170,11 @@ void statement() {
 	if (match(TOKEN_PRINT)) {
 		printStatement();
 	}
+	else if (match(TOKEN_LEFT_BRACE)) {
+		begineScope();
+		block();
+		endScope();
+	}
 	else {
 		expressionStatement();
 	}
@@ -167,6 +184,21 @@ void printStatement() {
 	expression();
 	consume(TOKEN_SEMICOLON, "Expect ';' after value.");
 	emitByte(OP_PRINT);
+}
+
+void block() {
+	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+		declaration();
+	}
+	consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
+void beginScope() {
+	current->scopeDepth++;
+}
+
+void endScope() {
+	current->scopeDepth--;
 }
 
 void expressionStatement() {
