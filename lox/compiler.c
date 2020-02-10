@@ -429,7 +429,7 @@ void namedVariable(Token name, bool canAssign) {
 }
 
 int resolveLocal(Compiler* compiler, Token* name) {
-	for (int i = compiler->localCount - 1; i >= 0; i++) {
+	for (int i = compiler->localCount - 1; i >= 0; i--) {
 		Local* local = &compiler->locals[i];
 		if (identifiersEqual(name, &local->name)) {
 			return i;
