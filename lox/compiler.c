@@ -24,6 +24,8 @@ static void defineVariable(uint8_t);
 static void markInitialized();
 static void statement();
 static void printStatement();
+static void ifStatement();
+static void patchJump(int offset);
 static void block();
 static void beginScope();
 static void endScope();
@@ -47,6 +49,7 @@ static void emitByte(uint8_t);
 static void emitBytes(uint8_t, uint8_t);
 static void emitConstant(Value);
 static uint8_t makeConstant(Value);
+static int emitJump(uint8_t);
 static void emitReturn();
 static Chunk* currentChunk();
 static void endCompiler();
@@ -224,6 +227,9 @@ void statement() {
 	if (match(TOKEN_PRINT)) {
 		printStatement();
 	}
+	else if (match(TOKEN_IF)) {
+		ifStatement();
+	}
 	else if (match(TOKEN_LEFT_BRACE)) {
 		beginScope();
 		block();
@@ -238,6 +244,24 @@ void printStatement() {
 	expression();
 	consume(TOKEN_SEMICOLON, "Expect ';' after value.");
 	emitByte(OP_PRINT);
+}
+
+void ifStatement() {
+	consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+	expression();
+	consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+	int thenJump = emitJump(OP_JUMP_IF_FALSE);
+	statement();
+	patchJump(thenJump);
+}
+
+void patchJump(int offset) {
+	int jump = currentChunk()->code - offset - 2;
+	if (jump > UINT16_MAX) {
+		error("Too much code to jump over.");
+	}
+	currentChunk()->code[offset] = (jump >> 8) & 0xff;
+	currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 void block() {
@@ -469,6 +493,12 @@ uint8_t makeConstant(Value value) {
 		return 0;
 	}
 	return (uint8_t)constant;
+}
+
+int emitJump(uint8_t instruction) {
+	emitByte(instruction);
+	emitBytes(0xff, 0xff);
+	return currentChunk()->count - 2;
 }
 
 void emitReturn() {
