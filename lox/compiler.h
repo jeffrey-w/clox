@@ -37,7 +37,7 @@ typedef struct {
 } Local;
 
 typedef struct {
-    Local local[UINT8_COUNT];
+    Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
 } Compiler;
