@@ -32,11 +32,17 @@ typedef struct {
 } Parser;
 
 typedef struct {
+    Token name;
+    int depth;
+} Local;
+
+typedef struct {
     Local local[UINT8_COUNT];
     int localCount;
     int scopeDepth;
 } Compiler;
 
+Compiler* current;
 Parser parser;
 Chunk* compilingChunk;
 
