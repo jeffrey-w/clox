@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "object.h"
 
+#define UNINITIALIZED -1
+
 static void initComplier(Compiler*);
 static void advance();
 static void consume(TokenType, const char*);
@@ -19,6 +21,7 @@ static bool identifiersEqual(Token*, Token*);
 static void addLocal(Token);
 static uint8_t identifierConstant(Token*);
 static void defineVariable(uint8_t);
+static void markInitialized();
 static void statement();
 static void printStatement();
 static void block();
@@ -174,7 +177,7 @@ void declareVariable() {
 	Token* name = &parser.previous; // TODO can't we just pass in parser.previous?
 	for (int i = current->localCount - 1; i >= 0; i--) {
 		Local* local = &current->locals[i];
-		if (local->depth != -1 && local->depth < current->scopeDepth) {
+		if (local->depth != UNINITIALIZED && local->depth < current->scopeDepth) {
 			break;
 		}
 		if (identifiersEqual(name, &local->name)) {
@@ -198,7 +201,7 @@ void addLocal(Token name) {
 	}
 	Local* local = &current->locals[current->localCount++];
 	local->name = name;
-	local->depth = current->scopeDepth;
+	local->depth = UNINITIALIZED;
 }
 
 uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
@@ -206,10 +209,15 @@ uint8_t identifierConstant(Token* name) { // TODO optimize this so that previous
 }
 
 void defineVariable(uint8_t global) {
-	if (current->scopeDepth) {
+	if (current->scopeDepth) { // TODO get name of local to runtime
+		markInitialized();
 		return;
 	}
 	emitBytes(OP_DEFINE_GLOBAL, global);
+}
+
+void markInitialized() {
+	current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
 void statement() {
@@ -410,7 +418,7 @@ void variable(bool canAssign) {
 void namedVariable(Token name, bool canAssign) {
 	uint8_t getOp, setOp;
 	int arg = resolveLocal(current, &name);
-	if (arg != -1) {
+	if (arg != UNINITIALIZED) {
 		getOp = OP_GET_LOCAL;
 		setOp = OP_SET_LOCAL;
 	}
@@ -432,10 +440,13 @@ int resolveLocal(Compiler* compiler, Token* name) {
 	for (int i = compiler->localCount - 1; i >= 0; i--) {
 		Local* local = &compiler->locals[i];
 		if (identifiersEqual(name, &local->name)) {
+			if (local->depth == UNINITIALIZED) {
+				error("Cannot read local variable in its own initializer.");
+			}
 			return i;
 		}
 	}
-	return -1;
+	return UNINITIALIZED;
 }
 
 void emitByte(uint8_t byte) {
