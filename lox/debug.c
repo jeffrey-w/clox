@@ -3,8 +3,8 @@
 #include "debug.h"
 #include "value.h"
 
-static int simpleInstruction(const char* name, int offset);
-static int constantInstruction(const char* name, Chunk* chunk, int offset);
+static int simpleInstruction(const char*, int);
+static int constantInstruction(const char*, Chunk*, int);
 
 void disassembleChunk(Chunk* chunk, const char* name) {
 	printf("== %s ==\n", name);

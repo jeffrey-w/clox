@@ -13,10 +13,10 @@
 
 static InterpretResult run();
 static void resetStack();
-static Value peek(int distance);
+static Value peek(int);
 static void concatenate();
-static bool isFalsey(Value value);
-static void runtimeError(const char* format, ...);
+static bool isFalsey(Value);
+static void runtimeError(const char*, ...);
 
 void initVM() {
 	resetStack();

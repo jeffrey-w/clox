@@ -17,8 +17,8 @@
 #define EX_IOERR 74
 
 static void repl();
-static void runFile(const char* path);
-static char* readFile(const char* path);
+static void runFile(const char*);
+static char* readFile(const char*);
 
 int main(int argc, const char* argv[]) {
 	initVM();

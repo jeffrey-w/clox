@@ -13,9 +13,9 @@
 #define ALLOCATE_OBJ(type, objectType) \
 	(type*)allocateObject(sizeof(type), objectType);
 
-static Obj* allocateObject(size_t size, ObjType type);
-static ObjString* allocateString(char* data, int length, uint32_t hash);
-static uint32_t hashString(const char* key, int length);
+static Obj* allocateObject(size_t, ObjType);
+static ObjString* allocateString(char*, int, uint32_t);
+static uint32_t hashString(const char*, int);
 
 void printObject(Value value) {
 	switch (OBJ_TYPE(value)) {

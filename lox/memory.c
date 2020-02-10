@@ -5,7 +5,7 @@
 #include "object.h"
 #include "vm.h"
 
-static void freeObject(Obj* object);
+static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
 	if (newSize == 0) {

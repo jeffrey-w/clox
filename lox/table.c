@@ -8,8 +8,8 @@
 
 #define TABLE_MAX_LOAD 0.75
 
-static void adjustCapacity(Table* table, int capacity);
-static Entry* findEntry(Entry* entries, int capacity, ObjString* key);
+static void adjustCapacity(Table*, int);
+static Entry* findEntry(Entry*, int, ObjString*);
 
 void initTable(Table* table) {
 	table->count = 0;

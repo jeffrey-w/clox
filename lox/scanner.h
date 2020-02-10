@@ -41,5 +41,5 @@ typedef struct {
 
 Scanner scanner;
 
-void initScanner(const char* source);
+void initScanner(const char*);
 Token scanToken();

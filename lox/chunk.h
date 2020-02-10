@@ -34,7 +34,7 @@ typedef struct {
 	ValueArray constants;
 } Chunk;
 
-void initChunk(Chunk* chunk);
-void freeChunk(Chunk* chunk);
-void writeChunk(Chunk* chunk, uint8_t byte, int line);
-int addConstant(Chunk* chunk, Value byte);
+void initChunk(Chunk*);
+void freeChunk(Chunk*);
+void writeChunk(Chunk*, uint8_t, int);
+int addConstant(Chunk*, Value);

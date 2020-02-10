@@ -8,39 +8,39 @@
 #include "object.h"
 
 static void advance();
-static void consume(TokenType type, const char* message);
+static void consume(TokenType, const char*);
 static void declaration();
 static void varDeclaration();
-static uint8_t parseVariable(const char* errorMessage);
-static uint8_t identifierConstant(Token* name);
-static void defineVariable(uint8_t global);
+static uint8_t parseVariable(const char*);
+static uint8_t identifierConstant(Token*);
+static void defineVariable(uint8_t);
 static void statement();
 static void printStatement();
 static void expressionStatement();
 static void synchronize();
-static bool match(TokenType type);
-static bool check(TokenType type);
+static bool match(TokenType);
+static bool check(TokenType);
 static void expression();
-static void parsePrecedence(Precedence precedence);
-static ParseRule* getRule(TokenType type);
-static void literal(bool canAssign);
-static void number(bool canAssign);
-static void string(bool canAssign);
-static void unary(bool canAssign);
-static void binary(bool canAssign);
-static void grouping(bool canAssign);
-static void variable(bool canAssign);
-static void namedVariable(Token name, bool canAssign);
-static void emitByte(uint8_t byte);
-static void emitBytes(uint8_t one, uint8_t two);
-static void emitConstant(Value value);
-static uint8_t makeConstant(Value value);
+static void parsePrecedence(Precedence);
+static ParseRule* getRule(TokenType);
+static void literal(bool);
+static void number(bool);
+static void string(bool);
+static void unary(bool);
+static void binary(bool);
+static void grouping(bool);
+static void variable(bool);
+static void namedVariable(Token, bool);
+static void emitByte(uint8_t);
+static void emitBytes(uint8_t, uint8_t);
+static void emitConstant(Value);
+static uint8_t makeConstant(Value);
 static void emitReturn();
 static Chunk* currentChunk();
 static void endCompiler();
-static void error(const char* message);
-static void errorAtCurrent(const char* message);
-static void errorAt(Token* token, const char* message);
+static void error(const char*);
+static void errorAtCurrent(const char*);
+static void errorAt(Token*, const char*);
 
 ParseRule rules[] = {
   { grouping, NULL,    PREC_NONE },       // TOKEN_LEFT_PAREN      

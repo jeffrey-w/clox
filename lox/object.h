@@ -24,9 +24,9 @@ struct sObjString { // TODO take 'const' strings from source
 	uint32_t hash;
 };
 
-void printObject(Value value);
-ObjString* copyString(const char* string, int length);
-ObjString* takeString(char* string, int length);
+void printObject(Value);
+ObjString* copyString(const char*, int);
+ObjString* takeString(char*, int);
 
 static inline bool isObjType(Value value, ObjType type) {
 	return IS_OBJ(value) && AS_OBJ(value)->type == type;

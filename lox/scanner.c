@@ -6,19 +6,19 @@
 
 static void skipWhitespace();
 static bool isAtEnd();
-static Token makeToken(TokenType type);
-static Token errorToken(const char* message);
+static Token makeToken(TokenType);
+static Token errorToken(const char*);
 static Token identifier();
 static TokenType indentifierType();
-static TokenType checkKeyword(int start, int length, const char* rest, TokenType type);
+static TokenType checkKeyword(int, int, const char*, TokenType);
 static Token number();
 static Token string();
 static char advance();
 static char peek();
 static char peekNext();
-static bool match(char expected);
-static bool isAlpha(char c);
-static bool isDigit(char c);
+static bool match(char);
+static bool isAlpha(char);
+static bool isDigit(char);
 
 void initScanner(const char* source) {
 	scanner.start = source;

@@ -14,10 +14,10 @@ typedef struct {
 	Entry* entries;
 } Table;
 
-void initTable(Table* table);
-void freeTable(Table* table);
-bool tableGet(Table* table, ObjString* key, Value* value);
-bool tableSet(Table* table, ObjString* key, Value value);
-bool tableDelete(Table* table, ObjString* key);
-void tableAddAll(Table* from, Table* to);
-ObjString* tableFindString(Table* table, const char* string, int length, uint32_t hash);
+void initTable(Table*);
+void freeTable(Table*);
+bool tableGet(Table*, ObjString*, Value*);
+bool tableSet(Table*, ObjString*, Value);
+bool tableDelete(Table*, ObjString*);
+void tableAddAll(Table*, Table*);
+ObjString* tableFindString(Table*, const char*, int, uint32_t);
