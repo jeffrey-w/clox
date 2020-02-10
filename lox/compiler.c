@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "chunk.h"
 #include "common.h"
@@ -13,6 +14,9 @@ static void consume(TokenType, const char*);
 static void declaration();
 static void varDeclaration();
 static uint8_t parseVariable(const char*);
+static void declareVariable();
+static bool identifiersEqual(Token*, Token*);
+static void addLocal(Token);
 static uint8_t identifierConstant(Token*);
 static void defineVariable(uint8_t);
 static void statement();
@@ -155,7 +159,45 @@ void varDeclaration() {
 
 uint8_t parseVariable(const char* errorMessage) {
 	consume(TOKEN_IDENTIFIER, errorMessage);
+	declareVariable();
+	if (current->scopeDepth) {
+		return 0;
+	}
 	return identifierConstant(&parser.previous);
+}
+
+void declareVariable() {
+	if (!current->scopeDepth) {
+		return;
+	}
+	Token* name = &parser.previous; // TODO can't we just pass in parser.previous?
+	for (int i = current->localCount - 1; i >= 0; i--) {
+		Local* local = &current->locals[i];
+		if (local->depth != -1 && local->depth < current->scopeDepth) {
+			break;
+		}
+		if (identifiersEqual(name, &local->name)) {
+			error("Variable with this name already declared in this scope.");
+		}
+	}
+	addLocal(*name);
+}
+
+bool identifiersEqual(Token* a, Token* b) {
+	if (a->length != b->length) {
+		return false;
+	}
+	return !memcmp(a->start, b->start, a->length);
+}
+
+void addLocal(Token name) {
+	if (current->localCount == UINT8_MAX) {
+		error("Too many local variables in function.");
+		return;
+	}
+	Local* local = &current->locals[current->localCount++];
+	local->name = name;
+	local->depth = current->scopeDepth;
 }
 
 uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
@@ -163,6 +205,9 @@ uint8_t identifierConstant(Token* name) { // TODO optimize this so that previous
 }
 
 void defineVariable(uint8_t global) {
+	if (current->scopeDepth) {
+		return;
+	}
 	emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
@@ -171,7 +216,7 @@ void statement() {
 		printStatement();
 	}
 	else if (match(TOKEN_LEFT_BRACE)) {
-		begineScope();
+		beginScope();
 		block();
 		endScope();
 	}
@@ -199,6 +244,10 @@ void beginScope() {
 
 void endScope() {
 	current->scopeDepth--;
+	while (current->localCount && current->locals[current->localCount - 1].depth > current->scopeDepth) {
+		emitByte(OP_POP);
+		current->localCount--;
+	}
 }
 
 void expressionStatement() {
