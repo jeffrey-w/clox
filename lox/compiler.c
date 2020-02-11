@@ -26,6 +26,7 @@ static void statement();
 static void printStatement();
 static void ifStatement();
 static void patchJump(int offset);
+static void whileStatement();
 static void block();
 static void beginScope();
 static void endScope();
@@ -42,6 +43,7 @@ static void string(bool);
 static void unary(bool);
 static void binary(bool);
 static void and_(bool);
+static void or_(bool);
 static void grouping(bool);
 static void variable(bool);
 static void namedVariable(Token, bool);
@@ -51,6 +53,7 @@ static void emitBytes(uint8_t, uint8_t);
 static void emitConstant(Value);
 static uint8_t makeConstant(Value);
 static int emitJump(uint8_t);
+static void emitLoop(int);
 static void emitReturn();
 static Chunk* currentChunk();
 static void endCompiler();
@@ -89,7 +92,7 @@ ParseRule rules[] = {
   { NULL,     NULL,    PREC_NONE },       // TOKEN_FUN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_IF
   { literal,  NULL,    PREC_NONE },       // TOKEN_NIL
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_OR
+  { NULL,     or_,     PREC_OR },         // TOKEN_OR
   { NULL,     NULL,    PREC_NONE },       // TOKEN_PRINT
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RETURN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_SUPER
@@ -231,6 +234,9 @@ void statement() {
 	else if (match(TOKEN_IF)) {
 		ifStatement();
 	}
+	else if (match(TOKEN_WHILE)) {
+		whileStatement();
+	}
 	else if (match(TOKEN_LEFT_BRACE)) {
 		beginScope();
 		block();
@@ -271,6 +277,19 @@ void patchJump(int offset) {
 	}
 	currentChunk()->code[offset] = (jump >> 8) & 0xff;
 	currentChunk()->code[offset + 1] = jump & 0xff;
+}
+
+void whileStatement() {
+	int loopStart = currentChunk()->count;
+	consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+	expression();
+	consume(TOKEN_RIGHT_PAREN, "Expect ')' after condtion.");
+	int exitJump = emitJump(OP_JUMP_IF_FALSE);
+	emitByte(OP_POP);
+	statement();
+	emitLoop(loopStart);
+	patchJump(exitJump);
+	emitByte(OP_POP);
 }
 
 void block() {
@@ -446,6 +465,15 @@ void and_(bool canAssign) {
 	patchJump(endJump);
 }
 
+void or_(bool canAssign) {
+	int elseJump = emitJump(OP_JUMP_IF_FALSE);
+	int endJump = emitJump(OP_JUMP);
+	patchJump(elseJump);
+	emitByte(OP_POP);
+	parsePrecedence(PREC_OR);
+	patchJump(endJump);
+}
+
 void grouping(bool canAssign) {
 	expression();
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
@@ -515,6 +543,16 @@ int emitJump(uint8_t instruction) {
 	emitByte(instruction);
 	emitBytes(0xff, 0xff);
 	return currentChunk()->count - 2;
+}
+
+void emitLoop(int loopStart) {
+	emitByte(OP_LOOP);
+	int offset = currentChunk()->count - loopStart + 2;
+	if (offset > UINT16_MAX) {
+		error("Loop body too large.");
+	}
+	emitByte((offset >> 8) & 0xff);
+	emitByte(offset & 0xff);
 }
 
 void emitReturn() {
