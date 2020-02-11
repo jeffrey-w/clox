@@ -247,12 +247,20 @@ void printStatement() {
 }
 
 void ifStatement() {
+	int thenJump, elseJump;
 	consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
 	expression();
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
-	int thenJump = emitJump(OP_JUMP_IF_FALSE);
+	thenJump = emitJump(OP_JUMP_IF_FALSE);
+	emitByte(OP_POP);
 	statement();
+	elseJump = emitJump(OP_JUMP);
 	patchJump(thenJump);
+	emitByte(OP_POP);
+	if (match(TOKEN_ELSE)) {
+		statement();
+		patchJump(elseJump);
+	}
 }
 
 void patchJump(int offset) {
