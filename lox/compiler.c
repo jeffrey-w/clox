@@ -41,6 +41,7 @@ static void number(bool);
 static void string(bool);
 static void unary(bool);
 static void binary(bool);
+static void and_(bool);
 static void grouping(bool);
 static void variable(bool);
 static void namedVariable(Token, bool);
@@ -58,46 +59,46 @@ static void errorAtCurrent(const char*);
 static void errorAt(Token*, const char*);
 
 ParseRule rules[] = {
-  { grouping, NULL,    PREC_NONE },       // TOKEN_LEFT_PAREN      
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_PAREN     
+  { grouping, NULL,    PREC_NONE },       // TOKEN_LEFT_PAREN
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_PAREN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_LEFT_BRACE
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACE     
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_COMMA           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_DOT             
-  { unary,    binary,  PREC_TERM },       // TOKEN_MINUS           
-  { NULL,     binary,  PREC_TERM },       // TOKEN_PLUS            
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_SEMICOLON       
-  { NULL,     binary,  PREC_FACTOR },     // TOKEN_SLASH           
-  { NULL,     binary,  PREC_FACTOR },     // TOKEN_STAR            
-  { unary,    NULL,    PREC_NONE },       // TOKEN_BANG            
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_BANG_EQUAL      
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_EQUAL           
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_EQUAL_EQUAL     
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_GREATER         
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_GREATER_EQUAL   
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS            
-  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS_EQUAL      
-  { variable, NULL,    PREC_NONE },       // TOKEN_IDENTIFIER      
-  { string,   NULL,    PREC_NONE },       // TOKEN_STRING          
-  { number,   NULL,    PREC_NONE },       // TOKEN_NUMBER          
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_AND             
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_CLASS           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_ELSE            
-  { literal,  NULL,    PREC_NONE },       // TOKEN_FALSE           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_FOR             
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_FUN             
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_IF              
-  { literal,  NULL,    PREC_NONE },       // TOKEN_NIL             
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_OR              
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_PRINT           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_RETURN          
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_SUPER           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_THIS            
-  { literal,  NULL,    PREC_NONE },       // TOKEN_TRUE            
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_VAR             
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_WHILE           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_ERROR           
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_EOF             
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACE
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_COMMA
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_DOT
+  { unary,    binary,  PREC_TERM },       // TOKEN_MINUS
+  { NULL,     binary,  PREC_TERM },       // TOKEN_PLUS
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_SEMICOLON
+  { NULL,     binary,  PREC_FACTOR },     // TOKEN_SLASH
+  { NULL,     binary,  PREC_FACTOR },     // TOKEN_STAR
+  { unary,    NULL,    PREC_NONE },       // TOKEN_BANG
+  { NULL,     binary,  PREC_EQUALITY },   // TOKEN_BANG_EQUAL
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_EQUAL
+  { NULL,     binary,  PREC_EQUALITY },   // TOKEN_EQUAL_EQUAL
+  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_GREATER
+  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_GREATER_EQUAL
+  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS
+  { NULL,     binary,  PREC_COMPARISON }, // TOKEN_LESS_EQUAL
+  { variable, NULL,    PREC_NONE },       // TOKEN_IDENTIFIER
+  { string,   NULL,    PREC_NONE },       // TOKEN_STRING
+  { number,   NULL,    PREC_NONE },       // TOKEN_NUMBER
+  { NULL,     and_,    PREC_AND },        // TOKEN_AND
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_CLASS
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_ELSE
+  { literal,  NULL,    PREC_NONE },       // TOKEN_FALSE
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_FOR
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_FUN
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_IF
+  { literal,  NULL,    PREC_NONE },       // TOKEN_NIL
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_OR
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_PRINT
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_RETURN
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_SUPER
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_THIS
+  { literal,  NULL,    PREC_NONE },       // TOKEN_TRUE
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_VAR
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_WHILE
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_ERROR
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_EOF
 };
 
 bool compile(const char* source, Chunk* chunk) {
@@ -436,6 +437,13 @@ void binary(bool canAssign) {
 	default:
 		return; // TODO need internal error logic
 	}
+}
+
+void and_(bool canAssign) {
+	int endJump = emitJump(OP_JUMP_IF_FALSE);
+	emitByte(OP_POP);
+	parsePrecedence(PREC_AND);
+	patchJump(endJump);
 }
 
 void grouping(bool canAssign) {
