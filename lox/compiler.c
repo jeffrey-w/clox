@@ -256,7 +256,7 @@ void ifStatement() {
 }
 
 void patchJump(int offset) {
-	int jump = currentChunk()->code - offset - 2;
+	int jump = currentChunk()->count - offset - 2;
 	if (jump > UINT16_MAX) {
 		error("Too much code to jump over.");
 	}
