@@ -179,6 +179,11 @@ InterpretResult run() {
 			printValue(pop());
 			printf("\n");
 			break;
+		case OP_JUMP: {
+			uint8_t offset = READ_SHORT();
+			vm.ip += offset;
+			break;
+		}
 		case OP_JUMP_IF_FALSE: {
 			uint8_t offset = READ_SHORT();
 			if (isFalsey(peek(0))) {
