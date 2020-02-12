@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "object.h"
 
+#define PARAM_MAX 255
 #define UNINITIALIZED -1
 
 // TODO add support for switch statements and the ternary operator
@@ -16,6 +17,8 @@ static void initComplier(Compiler*, FunctionType);
 static void advance();
 static void consume(TokenType, const char*);
 static void declaration();
+static void funDeclaration();
+static void function(FunctionType);
 static void varDeclaration();
 static uint8_t parseVariable(const char*);
 static void declareVariable();
@@ -122,6 +125,7 @@ ObjFunction* compile(const char* source) {
 }
 
 void initComplier(Compiler* compiler, FunctionType type) {
+	compiler->enclosing = current;
 	compiler->function = NULL;
 	compiler->type = type;
 	compiler->localCount = 0;
@@ -154,7 +158,10 @@ void consume(TokenType type, const char* message) {
 }
 
 void declaration() {
-	if (match(TOKEN_VAR)) {
+	if (match(TOKEN_FUN)) {
+		funDeclaration();
+	}
+	else if (match(TOKEN_VAR)) {
 		varDeclaration();
 	}
 	else {
@@ -163,6 +170,36 @@ void declaration() {
 	if (parser.panicMode) {
 		synchronize();
 	}
+}
+
+void funDeclaration() {
+	uint8_t global = parseVariable("Expect function name.");
+	markInitialized();
+	function(TYPE_FUNCTION);
+	defineVariable(global);
+}
+
+void function(FunctionType type) {
+	Compiler compiler;
+	initComplier(&compiler, type);
+	beginScope();
+	if (!check(TOKEN_RIGHT_PAREN)) {
+		do {
+			current->function->arity++;
+			if (current->function->arity > PARAM_MAX) {
+				// TODO concatenate PARAM_MAX to rest of msg before passing to errorAtCurrent
+				errorAtCurrent("Cannot have more than 255 parameters.");
+			}
+			uint8_t paramConstant = parseVariable("Expect parameter name.");
+			defineVariable(paramConstant);
+		} while (match(TOKEN_COMMA));
+	}
+	consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+	consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+	consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+	block();
+	ObjFunction* function = endCompiler();
+	emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
 }
 
 void varDeclaration() {
@@ -233,6 +270,9 @@ void defineVariable(uint8_t global) {
 }
 
 void markInitialized() {
+	if (!current->scopeDepth) {
+		return;
+	}
 	current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -621,6 +661,7 @@ ObjFunction* endCompiler() {
 		disassembleChunk(currentChunk(), function->name ? function->name->data : "<script>");
 	}
 #endif // DEBUG_PRINT_CODE
+	current = current->enclosing;
 	return function;
 
 }
