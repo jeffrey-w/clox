@@ -1,10 +1,12 @@
 #pragma once
 
 #include "chunk.h"
+#include "object.h"
 #include "table.h"
 #include "value.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef enum {
 	INTERPRET_OK,
@@ -13,8 +15,14 @@ typedef enum {
 } InterpretResult;
 
 typedef struct {
-	Chunk* chunk;
+	ObjFunction* function;
 	uint8_t* ip;
+	Value* slots;
+} CallFrame;
+
+typedef struct {
+	CallFrame frames[FRAMES_MAX];
+	int frameCount;
 	Value stack[STACK_MAX]; // TODO need to handle stack overflow
 	Value* stackTop;
 	Table globals;
