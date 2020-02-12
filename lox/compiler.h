@@ -1,5 +1,6 @@
 #pragma once
 
+#include "object.h"
 #include "scanner.h"
 
 typedef enum {
@@ -51,6 +52,5 @@ typedef struct {
 
 Compiler* current;
 Parser parser;
-Chunk* compilingChunk;
 
-bool compile(const char*, Chunk*);
+ObjFunction* compile(const char*);
