@@ -12,7 +12,7 @@
 
 // TODO add support for switch statements and the ternary operator
 
-static void initComplier(Compiler*);
+static void initComplier(Compiler*, FunctionType);
 static void advance();
 static void consume(TokenType, const char*);
 static void declaration();
@@ -59,7 +59,7 @@ static int emitJump(uint8_t);
 static void emitLoop(int);
 static void emitReturn();
 static Chunk* currentChunk();
-static void endCompiler();
+static ObjFunction* endCompiler();
 static void error(const char*);
 static void errorAtCurrent(const char*);
 static void errorAt(Token*, const char*);
@@ -107,25 +107,31 @@ ParseRule rules[] = {
   { NULL,     NULL,    PREC_NONE },       // TOKEN_EOF
 };
 
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source) {
 	Compiler compiler;
 	initScanner(source);
-	initComplier(&compiler);
+	initComplier(&compiler, TYPE_SCRIPT);
 	parser.hadError = false;
 	parser.panicMode = false;
-	compilingChunk = chunk;
 	advance();
 	while (!match(TOKEN_EOF)) {
 		declaration();
 	}
-	endCompiler();
-	return !parser.hadError;
+	ObjFunction* function = endCompiler();
+	return parser.hadError ? NULL : function;
 }
 
-void initComplier(Compiler* compiler) {
+void initComplier(Compiler* compiler, FunctionType type) {
+	compiler->function = NULL;
+	compiler->type = type;
 	compiler->localCount = 0;
 	compiler->scopeDepth = 0;
+	compiler->function = newFunction();
 	current = compiler;
+	Local* local = &current->locals[current->localCount++];
+	local->depth = 0;
+	local->name.start = "";
+	local->name.length = 0;
 }
 
 void advance() {
@@ -607,13 +613,15 @@ Chunk* currentChunk() {
 	return &current->function->chunk;
 }
 
-void endCompiler() {
+ObjFunction* endCompiler() {
 	emitReturn();
+	ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
 	if (!parser.hadError) {
-		disassembleChunk(currentChunk(), "code");
+		disassembleChunk(currentChunk(), function->name ? function->name->data : "<script>");
 	}
 #endif // DEBUG_PRINT_CODE
+	return function;
 
 }
 
