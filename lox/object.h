@@ -1,5 +1,6 @@
 #pragma once
 
+#include "chunk.h"
 #include "common.h"
 #include "value.h"
 
@@ -9,7 +10,8 @@
 #define AS_CSTRING(value)       (AS_STRING(value)->data)
 
 typedef enum {
-	OBJ_STRING
+	OBJ_STRING,
+	OBJ_FUNCTION
 } ObjType;
 
 struct sObj {
@@ -24,9 +26,17 @@ struct sObjString { // TODO take 'const' strings from source
 	uint32_t hash;
 };
 
+typedef struct {
+	Obj obj;
+	int arity;
+	Chunk chunk;
+	ObjString* name
+} ObjFunction;
+
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
+ObjFunction* newFunction();
 
 static inline bool isObjType(Value value, ObjType type) {
 	return IS_OBJ(value) && AS_OBJ(value)->type == type;
