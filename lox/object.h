@@ -32,7 +32,7 @@ typedef struct {
 	Obj obj;
 	int arity;
 	Chunk chunk;
-	ObjString* name
+	ObjString* name;
 } ObjFunction;
 
 void printObject(Value);
