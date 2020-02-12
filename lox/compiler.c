@@ -604,7 +604,7 @@ void emitReturn() {
 }
 
 Chunk* currentChunk() {
-	return compilingChunk;
+	return &current->function->chunk;
 }
 
 void endCompiler() {
