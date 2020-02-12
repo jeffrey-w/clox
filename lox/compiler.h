@@ -42,7 +42,8 @@ typedef struct {
     int depth;
 } Local;
 
-typedef struct {
+typedef struct sCompiler {
+    struct sCompiler* enclosing;
     ObjFunction* function;
     FunctionType type;
     Local locals[UINT8_COUNT];
