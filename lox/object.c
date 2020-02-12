@@ -48,6 +48,14 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
+ObjFunction* newFunction() {
+	ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+	function->arity = 0;
+	function->name = NULL;
+	initChunk(&function->chunk);
+	return function;
+}
+
 uint32_t hashString(const char* key, int length) {
 	uint32_t hash = INITIAL_HASH;
 	for (int i = 0; i < length; i++) {
