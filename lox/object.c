@@ -16,14 +16,26 @@
 static Obj* allocateObject(size_t, ObjType);
 static ObjString* allocateString(char*, int, uint32_t);
 static uint32_t hashString(const char*, int);
+static void printFunction(ObjFunction*);
 
 void printObject(Value value) {
 	switch (OBJ_TYPE(value)) {
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(value));
+	case OBJ_FUNCTION:
+		printFunction(AS_FUNCTION(value));
+		break;
 	default:
 		break; // TODO need internal error logic
 	}
+}
+
+void printFunction(ObjFunction* function) {
+	if (!function->name) {
+		printf("<script>");
+		return;
+	}
+	printf("<fn %s>", function->name->data);
 }
 
 ObjString* copyString(const char* string, int length) {
