@@ -16,6 +16,11 @@ typedef enum {
     PREC_PRIMARY
 } Precedence;
 
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT
+} FunctionType;
+
 typedef void (*ParseFn)(bool);
 
 typedef struct {
@@ -37,6 +42,8 @@ typedef struct {
 } Local;
 
 typedef struct {
+    ObjFunction* function;
+    FunctionType type;
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
