@@ -197,6 +197,7 @@ InterpretResult run() {
 			break;
 		}
 		case OP_RETURN:
+			pop();
 			return INTERPRET_OK;
 		}
 	}
