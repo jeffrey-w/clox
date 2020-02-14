@@ -703,7 +703,7 @@ ObjFunction* endCompiler() {
 	ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
 	if (!parser.hadError) {
-		disassembleChunk(currentChunk(), function->name ? function->name->data : "<script>");
+		disassembleChunk(currentChunk(), function->name ? function->name->data : "script");
 	}
 #endif // DEBUG_PRINT_CODE
 	current = current->enclosing;
