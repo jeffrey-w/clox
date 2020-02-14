@@ -7,6 +7,7 @@
 #include "compiler.h"
 #include "debug.h"
 #include "memory.h"
+#include "natives.h"
 #include "value.h"
 #include "vm.h"
 
@@ -17,12 +18,14 @@ static void concatenate();
 static bool isFalsey(Value);
 static bool callValue(Value, int);
 static bool call(ObjFunction*, int);
+static void defineNative(const char*, NativeFn);
 static void runtimeError(const char*, ...);
 
 void initVM() {
 	resetStack();
 	initTable(&vm.globals);
 	initTable(&vm.strings);
+	defineNative("clock", clockNative);
 	vm.objects = NULL;
 }
 
@@ -259,6 +262,13 @@ bool isFalsey(Value value) {
 bool callValue(Value callee, int argCount) {
 	if (IS_OBJ(callee)) {
 		switch (OBJ_TYPE(callee)) {
+		case OBJ_NATIVE: {
+			NativeFn native = AS_NATIVE(callee);
+			Value result = native(argCount, vm.stackTop - argCount);
+			vm.stackTop -= argCount + 1;
+			push(result);
+			return true;
+		}
 		case OBJ_FUNCTION:
 			return call(AS_FUNCTION(callee), argCount);
 		default:
@@ -284,6 +294,14 @@ bool call(ObjFunction* function, int argCount) {
 	frame->ip = function->chunk.code;
 	frame->slots = vm.stackTop - argCount - 1;
 	return true;
+}
+
+void defineNative(const char* name, NativeFn function) {
+	push(OBJ_VAL(copyString(name, (int)strlen(name))));
+	push(OBJ_VAL(newNative(function)));
+	tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+	pop();
+	pop();
 }
 
 void runtimeError(const char* format, ...) {
