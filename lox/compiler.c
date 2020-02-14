@@ -672,6 +672,7 @@ void emitLoop(int loopStart) {
 }
 
 void emitReturn() {
+	emitByte(OP_NIL);
 	emitByte(OP_RETURN);
 }
 
