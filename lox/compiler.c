@@ -30,9 +30,9 @@ static void markInitialized();
 static void statement();
 static void printStatement();
 static void ifStatement();
-static void patchJump(int offset);
 static void whileStatement();
 static void forStatement();
+static void patchJump(int offset);
 static void block();
 static void beginScope();
 static void endScope();
@@ -288,6 +288,9 @@ void statement() {
 	else if (match(TOKEN_IF)) {
 		ifStatement();
 	}
+	else if (match(TOKEN_RETURN)) {
+		returnStatement();
+	}
 	else if (match(TOKEN_WHILE)) {
 		whileStatement();
 	}
@@ -325,15 +328,6 @@ void ifStatement() {
 		statement();
 		patchJump(elseJump);
 	}
-}
-
-void patchJump(int offset) {
-	int jump = currentChunk()->count - offset - 2;
-	if (jump > UINT16_MAX) {
-		error("Too much code to jump over.");
-	}
-	currentChunk()->code[offset] = (jump >> 8) & 0xff;
-	currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 void whileStatement() {
@@ -385,6 +379,15 @@ void forStatement() {
 		emitByte(OP_POP);
 	}
 	endScope();
+}
+
+void patchJump(int offset) {
+	int jump = currentChunk()->count - offset - 2;
+	if (jump > UINT16_MAX) {
+		error("Too much code to jump over.");
+	}
+	currentChunk()->code[offset] = (jump >> 8) & 0xff;
+	currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 void block() {
