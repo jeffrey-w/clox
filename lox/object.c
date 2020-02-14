@@ -22,6 +22,7 @@ void printObject(Value value) {
 	switch (OBJ_TYPE(value)) {
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(value));
+		break;
 	case OBJ_FUNCTION:
 		printFunction(AS_FUNCTION(value));
 		break;
