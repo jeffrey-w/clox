@@ -186,6 +186,7 @@ void function(FunctionType type) {
 	Compiler compiler;
 	initComplier(&compiler, type);
 	beginScope();
+	consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
 	if (!check(TOKEN_RIGHT_PAREN)) {
 		do {
 			current->function->arity++;
@@ -197,7 +198,6 @@ void function(FunctionType type) {
 			defineVariable(paramConstant);
 		} while (match(TOKEN_COMMA));
 	}
-	consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 	consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
 	block();
