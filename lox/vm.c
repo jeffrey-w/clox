@@ -52,6 +52,7 @@ InterpretResult interpret(const char* source) {
 
 InterpretResult run() {
 	CallFrame* frame = &vm.frames[vm.frameCount - 1];
+	// TODO store *frame->ip in a local register variable
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() \
 	(frame->ip += 2, (uint16_t)((frame->ip[-2] << 8 | frame->ip[-1])))
@@ -264,6 +265,7 @@ bool callValue(Value callee, int argCount) {
 		switch (OBJ_TYPE(callee)) {
 		case OBJ_NATIVE: {
 			NativeFn native = AS_NATIVE(callee);
+			// TODO add support for runtime catching runtime errors
 			Value result = native(argCount, vm.stackTop - argCount);
 			vm.stackTop -= argCount + 1;
 			push(result);
