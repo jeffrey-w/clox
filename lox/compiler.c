@@ -29,6 +29,7 @@ static void defineVariable(uint8_t);
 static void markInitialized();
 static void statement();
 static void printStatement();
+static void returnStatement();
 static void ifStatement();
 static void whileStatement();
 static void forStatement();
@@ -285,11 +286,11 @@ void statement() {
 	if (match(TOKEN_PRINT)) {
 		printStatement();
 	}
-	else if (match(TOKEN_IF)) {
-		ifStatement();
-	}
 	else if (match(TOKEN_RETURN)) {
 		returnStatement();
+	}
+	else if (match(TOKEN_IF)) {
+		ifStatement();
 	}
 	else if (match(TOKEN_WHILE)) {
 		whileStatement();
@@ -311,6 +312,20 @@ void printStatement() {
 	expression();
 	consume(TOKEN_SEMICOLON, "Expect ';' after value.");
 	emitByte(OP_PRINT);
+}
+
+void returnStatement() {
+	if (current->type == TYPE_SCRIPT) {
+		error("Cannot return from top-level code.");
+	}
+	if (match(TOKEN_SEMICOLON)) {
+		emitReturn();
+	}
+	else {
+		expression();
+		consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+		emitByte(OP_RETURN);
+	}
 }
 
 void ifStatement() {
