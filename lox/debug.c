@@ -9,7 +9,7 @@ static int byteInstruction(const char*, Chunk*, int);
 static int jumpInstruction(const char*, int, Chunk*, int);
 
 void disassembleChunk(Chunk* chunk, const char* name) {
-	printf("== %s ==\n", name);
+	printf("<%s>\n", name);
 	int offset = 0;
 	while (offset < chunk->count) {
 		offset = disassembleInstruction(chunk, offset);
