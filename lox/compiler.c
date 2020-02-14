@@ -703,7 +703,9 @@ ObjFunction* endCompiler() {
 	ObjFunction* function = current->function;
 #ifdef DEBUG_PRINT_CODE
 	if (!parser.hadError) {
+		printf("Compilation summary for: ");
 		disassembleChunk(currentChunk(), function->name ? function->name->data : "script");
+		printf("\n");
 	}
 #endif // DEBUG_PRINT_CODE
 	current = current->enclosing;
