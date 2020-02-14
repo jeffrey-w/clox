@@ -46,6 +46,8 @@ static ParseRule* getRule(TokenType);
 static void literal(bool);
 static void number(bool);
 static void string(bool);
+static void call(bool);
+static uint8_t argumentList();
 static void unary(bool);
 static void binary(bool);
 static void and_(bool);
@@ -68,7 +70,7 @@ static void errorAtCurrent(const char*);
 static void errorAt(Token*, const char*);
 
 ParseRule rules[] = {
-  { grouping, NULL,    PREC_NONE },       // TOKEN_LEFT_PAREN
+  { grouping, call,    PREC_CALL },       // TOKEN_LEFT_PAREN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_PAREN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_LEFT_BRACE
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACE
@@ -494,6 +496,27 @@ void number(bool canAssign) {
 
 void string(bool canAssign) {
 	emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
+void call(bool canAssign) {
+	uint8_t argCount = argumentList();
+	emitBytes(OP_CALL, argCount);
+}
+
+uint8_t argumentList() {
+	uint8_t argCount = 0;
+	if (!check(TOKEN_RIGHT_PAREN)) {
+		do {
+			expression();
+			if (argCount == PARAM_MAX) {
+				// TODO concatenate PARAM_MAX to rest of msg before passing to errorAtCurrent
+				error("Cannot have more than 255 arguments");
+			}
+			argCount++;
+		} while (match(TOKEN_COMMA));
+	}
+	consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+	return argCount;
 }
 
 void unary(bool canAssign) {
