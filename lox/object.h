@@ -6,13 +6,16 @@
 
 #define OBJ_TYPE(value)         (AS_OBJ(value)->type)
 #define IS_STRING(value)        isObjType(value, OBJ_STRING)
+#define IS_NATIVE(value)        isObjType(value, OBJ_NATIVE)  
 #define IS_FUNCTION(value)      isObjType(value, OBJ_FUNCTION)
-#define AS_STRING(value)        ((ObjString*)AS_OBJ(value))         
+#define AS_STRING(value)        ((ObjString*)AS_OBJ(value))        
 #define AS_CSTRING(value)       (AS_STRING(value)->data)
+#define AS_NATIVE(value)        (((ObjNative*)AS_OBJ(value))->function)
 #define AS_FUNCTION(value)      ((ObjFunction*)AS_OBJ(value))
 
 typedef enum {
 	OBJ_STRING,
+	OBJ_NATIVE,
 	OBJ_FUNCTION
 } ObjType;
 
@@ -28,6 +31,13 @@ struct sObjString { // TODO take 'const' strings from source
 	uint32_t hash;
 };
 
+typedef Value (*NativeFn)(int, Value*);
+
+typedef struct {
+	Obj obj;
+	NativeFn function;
+} ObjNative;
+
 typedef struct {
 	Obj obj;
 	int arity;
@@ -38,6 +48,7 @@ typedef struct {
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
+ObjNative* newNative(NativeFn);
 ObjFunction* newFunction();
 
 static inline bool isObjType(Value value, ObjType type) {
