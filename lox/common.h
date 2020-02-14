@@ -10,4 +10,3 @@
 
 // TODO use consistent NULL/0 check in control expressions
 // TODO hoist "private" globals to implementation files
-// TODO remove parameter names from function declarations
