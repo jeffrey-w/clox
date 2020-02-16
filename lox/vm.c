@@ -26,6 +26,7 @@ void initVM() {
 	initTable(&vm.globals);
 	initTable(&vm.strings);
 	defineNative("clock", clockNative);
+	defineNative("scan", scanNative);
 	vm.objects = NULL;
 }
 
