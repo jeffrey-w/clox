@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -21,4 +22,9 @@ Value scanNative(int argCount, Value* args) { // TODO this is not robust (e.g. f
 	} while(buffer[len - 1] != '\n');
 	buffer[len - 1] = '\0';
 	return OBJ_VAL(takeString(buffer, len - 1));
+}
+
+Value sinNative(int argCount, Value* args) {
+	// TODO if (argCount != 1 || !IS_NUMBER(args[0])) runtime error?
+	return NUMBER_VAL(sin(AS_NUMBER(args[0])));
 }
