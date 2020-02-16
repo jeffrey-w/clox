@@ -11,28 +11,42 @@
 #include "value.h"
 #include "vm.h"
 
-static InterpretResult run();
 static void resetStack();
+static void loadNatives();
+static void defineNative(const char*, NativeFn);
+static InterpretResult run();
 static Value peek(int);
 static void concatenate();
 static bool isFalsey(Value);
 static bool callValue(Value, int);
 static bool call(ObjFunction*, int);
-static void defineNative(const char*, NativeFn);
 static void runtimeError(const char*, ...);
 
 void initVM() {
 	resetStack();
 	initTable(&vm.globals);
 	initTable(&vm.strings);
-	defineNative("clock", clockNative);
-	defineNative("scan", scanNative);
+	loadNatives();
 	vm.objects = NULL;
 }
 
 void resetStack() {
 	vm.stackTop = vm.stack;
 	vm.frameCount = 0;
+}
+
+void loadNatives() {
+	defineNative("clock", clockNative);
+	defineNative("scan", scanNative);
+	defineNative("sin", sinNative);
+}
+
+void defineNative(const char* name, NativeFn function) {
+	push(OBJ_VAL(copyString(name, (int)strlen(name))));
+	push(OBJ_VAL(newNative(function)));
+	tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+	pop();
+	pop();
 }
 
 void freeVM() {
@@ -299,13 +313,6 @@ bool call(ObjFunction* function, int argCount) {
 	return true;
 }
 
-void defineNative(const char* name, NativeFn function) {
-	push(OBJ_VAL(copyString(name, (int)strlen(name))));
-	push(OBJ_VAL(newNative(function)));
-	tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
-	pop();
-	pop();
-}
 
 void runtimeError(const char* format, ...) {
 	va_list args;
