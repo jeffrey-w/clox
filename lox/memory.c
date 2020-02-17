@@ -44,8 +44,11 @@ void freeObject(Obj* object) {
 		FREE(ObjFunction, object);
 		break;
 	}
-	case OBJ_CLOSURE:
+	case OBJ_CLOSURE: {
+		ObjClosure* closure = (ObjClosure*)object;
+		FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
 		FREE(ObjClosure, object);
+	}
 	default:
 		break; // TODO need internal error logic
 	}
