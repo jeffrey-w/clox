@@ -38,6 +38,7 @@ struct sObjString { // TODO take 'const' strings from source
 typedef struct sObjUpvalue {
 	Obj obj;
 	Value* location;
+	Value closed;
 	struct sObjUpvalue* next;
 } ObjUpvalue;
 
