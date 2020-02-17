@@ -99,6 +99,7 @@ ObjString* allocateString(char* data, int length, uint32_t hash) {
 ObjUpvalue* newUpvalue(Value* location) {
 	ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
 	upvalue->location = location;
+	upvalue->closed = NIL_VAL;
 	upvalue->next = NULL;
 	return upvalue;
 }
