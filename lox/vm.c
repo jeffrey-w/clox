@@ -18,8 +18,9 @@ static InterpretResult run();
 static Value peek(int);
 static void concatenate();
 static bool isFalsey(Value);
+static ObjUpvalue* captureUpvalue(Value*);
 static bool callValue(Value, int);
-static bool call(ObjFunction*, int);
+static bool call(ObjClosure*, int);
 static void runtimeError(const char*, ...);
 
 void initVM() {
@@ -151,6 +152,16 @@ InterpretResult run() {
 			}
 			break;
 		}
+		case OP_GET_UPVALUE: {
+			uint8_t slot = READ_BYTE();
+			push(*frame->closure->upvalues[slot]->location);
+			break;
+		}
+		case OP_SET_UPVALUE: {
+			uint8_t slot = READ_BYTE();
+			*frame->closure->upvalues[slot]->location = peek(0);
+			break;
+		}
 		case OP_EQUAL: {
 			Value b = pop();
 			Value a = pop();
@@ -229,6 +240,16 @@ InterpretResult run() {
 			ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
 			ObjClosure* closure = newClosure(function);
 			push(OBJ_VAL(closure));
+			for (int i = 0; i < closure->upvalueCount; i++) {
+				uint8_t isLocal = READ_BYTE();
+				uint8_t index = READ_BYTE();
+				if (isLocal) {
+					closure->upvalues[i] = captureUpvalue(frame->slots + index);
+				}
+				else {
+					closure->upvalues[i] = frame->closure->upvalues[index];
+				}
+			}
 			break;
 		}
 		case OP_RETURN: {
@@ -282,6 +303,11 @@ bool isFalsey(Value value) {
 	//}
 	// TODO should 0 == false?
 	return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
+ObjUpvalue* captureUpvalue(Value* local) {
+	ObjUpvalue* upvalue = newUpvalue(local);
+	return upvalue;
 }
 
 bool callValue(Value callee, int argCount) {
