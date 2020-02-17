@@ -57,6 +57,8 @@ static void grouping(bool);
 static void variable(bool);
 static void namedVariable(Token, bool);
 static int resolveLocal(Compiler*, Token*);
+static int resolveUpvalue(Compiler*, Token*);
+static int addUpvalue(Compiler*, uint8_t, bool);
 static void emitByte(uint8_t);
 static void emitBytes(uint8_t, uint8_t);
 static void emitConstant(Value);
@@ -206,6 +208,11 @@ void function(FunctionType type) {
 	block();
 	ObjFunction* function = endCompiler();
 	emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
+	for (int i = 0; i < function->upvalueCount; i++) {
+		uint8_t isLocal = compiler.upvalues[i].isLocal ? 1 : 0;
+		uint8_t index = compiler.upvalues[i].index;
+		emitBytes(isLocal, index);
+	}
 }
 
 void varDeclaration() {
@@ -619,10 +626,14 @@ void variable(bool canAssign) {
 
 void namedVariable(Token name, bool canAssign) {
 	uint8_t getOp, setOp;
-	int arg = resolveLocal(current, &name);
-	if (arg != UNINITIALIZED) {
+	int arg;
+	if ((arg = resolveLocal(current, &name)) != UNINITIALIZED) {
 		getOp = OP_GET_LOCAL;
 		setOp = OP_SET_LOCAL;
+	}
+	else if ((arg = resolveUpvalue(current, &name)) != UNINITIALIZED) {
+		getOp = OP_GET_UPVALUE;
+		setOp = OP_SET_UPVALUE;
 	}
 	else {
 		arg = identifierConstant(&name);
@@ -649,6 +660,39 @@ int resolveLocal(Compiler* compiler, Token* name) {
 		}
 	}
 	return UNINITIALIZED;
+}
+
+int resolveUpvalue(Compiler* compiler, Token* name) {
+	int local, upvalue;
+	if (!compiler->enclosing) {
+		return UNINITIALIZED;
+	}
+	local = resolveLocal(compiler->enclosing, name);
+	if (local != UNINITIALIZED) {
+		return addUpvalue(compiler, (uint8_t)local, true);
+	}
+	upvalue = resolveUpvalue(compiler->enclosing, name);
+	if (upvalue != UNINITIALIZED) {
+		return addUpvalue(compiler, (uint8_t)local, false);
+	}
+	return UNINITIALIZED;
+}
+
+int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
+	int upvalueCount = compiler->function->upvalueCount;
+	for (int i = 0; i < upvalueCount; i++) {
+		Upvalue* upvalue = &compiler->upvalues[i];
+		if (upvalue->index == index && upvalue->isLocal == isLocal) {
+			return i;
+		}
+	}
+	if (upvalueCount == UINT8_COUNT) {
+		error("Too many closure variables in function.");
+		return 0;
+	}
+	compiler->upvalues[upvalueCount].isLocal = isLocal;
+	compiler->upvalues[upvalueCount].index = index;
+	return compiler->function->upvalueCount++;
 }
 
 void emitByte(uint8_t byte) {
