@@ -14,9 +14,17 @@
 	(type*)allocateObject(sizeof(type), objectType);
 
 static Obj* allocateObject(size_t, ObjType);
-static ObjString* allocateString(char*, int, uint32_t);
-static uint32_t hashString(const char*, int);
 static void printFunction(ObjFunction*);
+static uint32_t hashString(const char*, int);
+static ObjString* allocateString(char*, int, uint32_t);
+
+Obj* allocateObject(size_t size, ObjType type) {
+	Obj* object = (Obj*)reallocate(NULL, 0, size);
+	object->type = type;
+	object->next = vm.objects;
+	vm.objects = object;
+	return object;
+}
 
 void printObject(Value value) {
 	switch (OBJ_TYPE(value)) {
@@ -64,6 +72,24 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
+uint32_t hashString(const char* key, int length) {
+	uint32_t hash = INITIAL_HASH;
+	for (int i = 0; i < length; i++) {
+		hash ^= key[i];
+		hash *= HASH_SCALE;
+	}
+	return hash;
+}
+
+ObjString* allocateString(char* data, int length, uint32_t hash) {
+	ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+	string->length = length;
+	string->data = data;
+	string->hash = hash;
+	tableSet(&vm.strings, string, NIL_VAL);
+	return string;
+}
+
 ObjNative* newNative(NativeFn function) {
 	ObjNative* native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
 	native->function = function;
@@ -78,28 +104,11 @@ ObjFunction* newFunction() {
 	return function;
 }
 
-uint32_t hashString(const char* key, int length) {
-	uint32_t hash = INITIAL_HASH;
-	for (int i = 0; i < length; i++) {
-		hash ^= key[i];
-		hash *= HASH_SCALE;
-	}
-	return hash;
+ObjClosure* newClosure(ObjFunction* function) {
+	ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+	closure->function = function;
+	return closure;
 }
 
-Obj* allocateObject(size_t size, ObjType type) {
-	Obj* object = (Obj*)reallocate(NULL, 0, size);
-	object->type = type;
-	object->next = vm.objects;
-	vm.objects = object;
-	return object;
-}
 
-ObjString* allocateString(char* data, int length, uint32_t hash) {
-	ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
-	string->length = length;
-	string->data = data;
-	string->hash = hash;
-	tableSet(&vm.strings, string, NIL_VAL);
-	return string;
-}
+
