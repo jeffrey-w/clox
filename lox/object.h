@@ -17,6 +17,7 @@
 
 typedef enum {
 	OBJ_STRING,
+	OBJ_UPVALUE,
 	OBJ_NATIVE,
 	OBJ_FUNCTION,
 	OBJ_CLOSURE
@@ -33,6 +34,11 @@ struct sObjString { // TODO take 'const' strings from source
 	char* data; // TODO implement as flexible array member
 	uint32_t hash;
 };
+
+typedef struct sObjUpvalue {
+	Obj obj;
+	Value* location;
+} ObjUpvalue;
 
 typedef Value (*NativeFn)(int, Value*);
 
@@ -57,6 +63,7 @@ typedef struct {
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
+ObjUpvalue* newUpvalue(Value*);
 ObjNative* newNative(NativeFn);
 ObjFunction* newFunction();
 ObjClosure* newClosure(ObjFunction*);
