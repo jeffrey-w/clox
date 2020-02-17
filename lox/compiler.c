@@ -142,6 +142,7 @@ void initComplier(Compiler* compiler, FunctionType type) {
 	}
 	Local* local = &current->locals[current->localCount++];
 	local->depth = 0;
+	local->isCaptured = false;
 	local->name.start = "";
 	local->name.length = 0;
 }
@@ -268,6 +269,7 @@ void addLocal(Token name) {
 	Local* local = &current->locals[current->localCount++];
 	local->name = name;
 	local->depth = UNINITIALIZED;
+	local->isCaptured = false;
 }
 
 uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
@@ -426,7 +428,12 @@ void beginScope() {
 void endScope() {
 	current->scopeDepth--;
 	while (current->localCount && current->locals[current->localCount - 1].depth > current->scopeDepth) {
-		emitByte(OP_POP);
+		if (current->locals[current->localCount - 1].isCaptured) {
+			emitByte(OP_CLOSE_UPVALUE);
+		}
+		else {
+			emitByte(OP_POP);
+		}
 		current->localCount--;
 	}
 }
@@ -669,6 +676,7 @@ int resolveUpvalue(Compiler* compiler, Token* name) {
 	}
 	local = resolveLocal(compiler->enclosing, name);
 	if (local != UNINITIALIZED) {
+		compiler->enclosing->locals[local].isCaptured = true;
 		return addUpvalue(compiler, (uint8_t)local, true);
 	}
 	upvalue = resolveUpvalue(compiler->enclosing, name);
