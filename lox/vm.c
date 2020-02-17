@@ -34,6 +34,7 @@ void initVM() {
 void resetStack() {
 	vm.stackTop = vm.stack;
 	vm.frameCount = 0;
+	vm.openUpvalues = NULL;
 }
 
 void loadNatives() {
@@ -306,8 +307,25 @@ bool isFalsey(Value value) {
 }
 
 ObjUpvalue* captureUpvalue(Value* local) {
-	ObjUpvalue* upvalue = newUpvalue(local);
-	return upvalue;
+	ObjUpvalue* prev = NULL;
+	ObjUpvalue* upvalue = vm.openUpvalues;
+	ObjUpvalue* created;
+	while (upvalue && upvalue->location > local) {
+		prev = upvalue;
+		upvalue = upvalue->next;
+	}
+	if (upvalue && upvalue->location == local) {
+		return upvalue;
+	}
+	created = newUpvalue(local);
+	created->next = upvalue;
+	if (!prev) {
+		vm.openUpvalues = created;
+	}
+	else {
+		prev->next = created;
+	}
+	return created;
 }
 
 bool callValue(Value callee, int argCount) {
