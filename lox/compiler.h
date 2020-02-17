@@ -42,12 +42,18 @@ typedef struct {
     int depth;
 } Local;
 
+typedef struct {
+    uint8_t index;
+    bool isLocal;
+} Upvalue;
+
 typedef struct sCompiler {
     struct sCompiler* enclosing;
     ObjFunction* function;
     FunctionType type;
     Local locals[UINT8_COUNT];
     int localCount;
+    Upvalue upvalues[UINT8_COUNT];
     int scopeDepth;
 } Compiler;
 
