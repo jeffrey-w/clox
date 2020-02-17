@@ -19,6 +19,7 @@ static Value peek(int);
 static void concatenate();
 static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
+static void closeUpvalues(Value*);
 static bool callValue(Value, int);
 static bool call(ObjClosure*, int);
 static void runtimeError(const char*, ...);
@@ -253,8 +254,13 @@ InterpretResult run() {
 			}
 			break;
 		}
+		case OP_CLOSE_UPVALUE:
+			closeUpvalues(vm.stackTop - 1);
+			pop();
+			break;
 		case OP_RETURN: {
 			Value result = pop();
+			closeUpvalues(frame->slots);
 			vm.frameCount--;
 			if (!vm.frameCount) {
 				pop();
@@ -326,6 +332,15 @@ ObjUpvalue* captureUpvalue(Value* local) {
 		prev->next = created;
 	}
 	return created;
+}
+
+void closeUpvalues(Value* last) {
+	while (vm.openUpvalues && vm.openUpvalues->location >= last) {
+		ObjUpvalue* upvalue = vm.openUpvalues;
+		upvalue->closed = *upvalue->location;
+		upvalue->location = &upvalue->closed;
+		vm.openUpvalues = upvalue->next;
+	}
 }
 
 bool callValue(Value callee, int argCount) {
