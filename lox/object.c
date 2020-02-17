@@ -31,6 +31,9 @@ void printObject(Value value) {
 	case OBJ_STRING:
 		printf("%s", AS_CSTRING(value));
 		break;
+	//case OBJ_UPVALUE:
+	//	printf("upvalue");
+	//	break; TODO
 	case OBJ_NATIVE:
 		printf("<native fn>");
 		break;
@@ -72,6 +75,12 @@ ObjString* takeString(char* string, int length) {
 		return interned;
 	}
 	return allocateString(string, length, hash);
+}
+
+ObjUpvalue* newUpvalue(Value* location) {
+	ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+	upvalue->location = location;
+	return upvalue;
 }
 
 uint32_t hashString(const char* key, int length) {
