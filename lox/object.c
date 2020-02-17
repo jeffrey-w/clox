@@ -77,11 +77,6 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
-ObjUpvalue* newUpvalue(Value* location) {
-	ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
-	upvalue->location = location;
-	return upvalue;
-}
 
 uint32_t hashString(const char* key, int length) {
 	uint32_t hash = INITIAL_HASH;
@@ -101,6 +96,12 @@ ObjString* allocateString(char* data, int length, uint32_t hash) {
 	return string;
 }
 
+ObjUpvalue* newUpvalue(Value* location) {
+	ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+	upvalue->location = location;
+	return upvalue;
+}
+
 ObjNative* newNative(NativeFn function) {
 	ObjNative* native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
 	native->function = function;
@@ -117,8 +118,14 @@ ObjFunction* newFunction() {
 }
 
 ObjClosure* newClosure(ObjFunction* function) {
+	ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+	for (int i = 0; i < function->upvalueCount; i++) {
+		upvalues[i] = NULL;
+	}
 	ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
 	closure->function = function;
+	closure->upvalues = upvalues;
+	closure->upvalueCount = function->upvalueCount;
 	return closure;
 }
 
