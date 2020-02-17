@@ -16,7 +16,8 @@
 typedef enum {
 	OBJ_STRING,
 	OBJ_NATIVE,
-	OBJ_FUNCTION
+	OBJ_FUNCTION,
+	OBJ_CLOSURE
 } ObjType;
 
 struct sObj {
@@ -45,11 +46,17 @@ typedef struct {
 	ObjString* name;
 } ObjFunction;
 
+typedef struct {
+	Obj obj;
+	ObjFunction* function;
+} ObjClosure;
+
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
 ObjNative* newNative(NativeFn);
 ObjFunction* newFunction();
+ObjClosure* newClosure(ObjFunction*);
 
 static inline bool isObjType(Value value, ObjType type) {
 	return IS_OBJ(value) && AS_OBJ(value)->type == type;
