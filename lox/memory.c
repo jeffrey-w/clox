@@ -42,6 +42,20 @@ void markRoots() {
 	}
 }
 
+void markValue(Value value) {
+	if (!IS_OBJ(value)) {
+		return;
+	}
+	markObject(AS_OBJ(value));
+}
+
+void markObject(Obj* object) {
+	if (!object) {
+		return;
+	}
+	object->isMarked = true;
+}
+
 void freeObjects() {
 	Obj* object = vm.objects;
 	while (object != NULL) {
