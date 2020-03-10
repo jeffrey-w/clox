@@ -40,6 +40,7 @@ void markRoots() {
 	for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
 		markValue(*slot);
 	}
+	markTable(&vm.globals);
 }
 
 void markValue(Value value) {
