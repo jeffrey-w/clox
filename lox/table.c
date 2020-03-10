@@ -135,3 +135,11 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
 		index = (index + 1) & (capacity - 1);
 	}
 }
+
+void markTable(Table* table) {
+	for (int i = 0; i < table->capacity; i++) {
+		Entry* entry = &table->entries[i];
+		markObject((Obj*)entry->key);
+		markValue(entry->value);
+	}
+}

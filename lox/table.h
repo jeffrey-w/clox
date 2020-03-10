@@ -21,3 +21,4 @@ bool tableSet(Table*, ObjString*, Value);
 bool tableDelete(Table*, ObjString*);
 void tableAddAll(Table*, Table*);
 ObjString* tableFindString(Table*, const char*, int, uint32_t);
+void markTable(Table*);
