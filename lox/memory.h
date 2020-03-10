@@ -20,4 +20,5 @@
 	reallocate(pointer, sizeof(type) * (oldCount), 0)
 
 void* reallocate(void*, size_t, size_t);
+void collectGarbage();
 void freeObjects();
