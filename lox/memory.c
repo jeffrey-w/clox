@@ -10,6 +10,7 @@
 #include "debug.h"
 #endif // DEBUG_LOG_GC
 
+static void markRoots();
 static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
@@ -29,9 +30,16 @@ void collectGarbage() {
 #ifdef DEBUG_LOG_GC
 	printf("-- gc begin\n");
 #endif // DEBUG_LOG_GC
+	markRoots();
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
 #endif // DEBUG_LOG_GC
+}
+
+void markRoots() {
+	for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+		markValue(*slot);
+	}
 }
 
 void freeObjects() {
