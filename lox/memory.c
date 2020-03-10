@@ -53,6 +53,11 @@ void markObject(Obj* object) {
 	if (!object) {
 		return;
 	}
+#ifdef DEBUG_LOG_GC
+	printf("%p mark ", (void*)object);
+	printValue(OBJ_VAL(object));
+	printf("\n");
+#endif // DEBUG_LOG_GC
 	object->isMarked = true;
 }
 
