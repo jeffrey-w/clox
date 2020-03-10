@@ -26,6 +26,12 @@ void* reallocate(void* previous, size_t oldSize, size_t newSize) {
 }
 
 void collectGarbage() {
+#ifdef DEBUG_LOG_GC
+	printf("-- gc begin\n");
+#endif // DEBUG_LOG_GC
+#ifdef DEBUG_LOG_GC
+	printf("-- gc end\n");
+#endif // DEBUG_LOG_GC
 }
 
 void freeObjects() {
