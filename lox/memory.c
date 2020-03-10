@@ -5,14 +5,27 @@
 #include "object.h"
 #include "vm.h"
 
+#ifdef DEBUG_LOG_GC
+#include <stdio.h>
+#include "debug.h"
+#endif // DEBUG_LOG_GC
+
 static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
+	if (newSize > oldSize) {
+#ifdef DEBUG_STRESS_GC
+		collectGarbage();
+#endif // DEBUG_STRESS_GC
+	}
 	if (newSize == 0) {
 		free(previous);
 		return NULL;
 	}
 	return realloc(previous, newSize);
+}
+
+void collectGarbage() {
 }
 
 void freeObjects() {
