@@ -62,3 +62,4 @@ Compiler* current;
 Parser parser;
 
 ObjFunction* compile(const char*);
+void markCompilerRoots();

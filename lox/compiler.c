@@ -6,6 +6,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
 #include "object.h"
 
 #define PARAM_MAX 255
@@ -788,4 +789,12 @@ void errorAt(Token* token, const char* message) {
 	}
 	fprintf(stderr, ": %s\n", message);
 	parser.hadError = true;
+}
+
+void markCompilerRoots() {
+	Compiler* compiler = current;
+	while (compiler) {
+		markObject((Obj*)compiler->function);
+		compiler = compiler->enclosing;
+	}
 }
