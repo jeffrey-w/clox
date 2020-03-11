@@ -63,7 +63,7 @@ void markValue(Value value) {
 }
 
 void markObject(Obj* object) {
-	if (!object) {
+	if (!object || object->isMarked) {
 		return;
 	}
 #ifdef DEBUG_LOG_GC
