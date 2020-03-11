@@ -25,7 +25,7 @@ Obj* allocateObject(size_t size, ObjType type) {
 	object->next = vm.objects;
 	vm.objects = object;
 #ifdef DEBUG_LOG_GC
-	printf("%p allocate %ld for %d\n", (void*)object, size, type);
+	printf("%p allocate %ld for %d\n", (void*)object, size, type); // TODO pretty print object type
 #endif // DEBUG_LOG_GC
 	return object;
 }
