@@ -11,6 +11,8 @@
 #include "value.h"
 #include "vm.h"
 
+#define DEFAULT_NEXT_GC 0x100000
+
 static void resetStack();
 static void loadNatives();
 static void defineNative(const char*, NativeFn);
@@ -29,6 +31,8 @@ void initVM() {
 	initTable(&vm.globals);
 	initTable(&vm.strings);
 	loadNatives();
+	vm.bytesAllocated = 0;
+	vm.nextGC = DEFAULT_NEXT_GC;
 	vm.objects = NULL;
 	vm.grayCount = 0;
 	vm.grayCapacity = 0;
