@@ -14,6 +14,7 @@
 	(type*)allocateObject(sizeof(type), objectType);
 
 static Obj* allocateObject(size_t, ObjType);
+static char* prettyPrintType(ObjType);
 static void printFunction(ObjFunction*);
 static uint32_t hashString(const char*, int);
 static ObjString* allocateString(char*, int, uint32_t);
@@ -25,9 +26,26 @@ Obj* allocateObject(size_t size, ObjType type) {
 	object->next = vm.objects;
 	vm.objects = object;
 #ifdef DEBUG_LOG_GC
-	printf("%p allocate %ld for %d\n", (void*)object, size, type); // TODO pretty print object type
+	printf("%p allocate %ld bytes for %s\n", (void*)object, size, prettyPrintType(type));
 #endif // DEBUG_LOG_GC
 	return object;
+}
+
+char* prettyPrintType(ObjType type) {
+	switch (type) {
+	case OBJ_STRING:
+		return "string";
+	case OBJ_UPVALUE:
+		return "upvalue";
+	case OBJ_NATIVE:
+		return "native";
+	case OBJ_FUNCTION:
+		return "function";
+	case OBJ_CLOSURE:
+		return "closure";
+	default:
+		"unknown object";
+	}
 }
 
 void printObject(Value value) {
@@ -136,6 +154,3 @@ ObjClosure* newClosure(ObjFunction* function) {
 	closure->upvalueCount = function->upvalueCount;
 	return closure;
 }
-
-
-
