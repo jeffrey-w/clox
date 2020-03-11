@@ -37,6 +37,7 @@ void collectGarbage() {
 #endif // DEBUG_LOG_GC
 	markRoots();
 	traceReferences();
+	tableRemoveWhite(&vm.strings);
 	sweep();
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
