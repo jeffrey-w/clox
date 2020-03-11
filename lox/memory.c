@@ -76,8 +76,16 @@ void markObject(Obj* object) {
 #endif // DEBUG_LOG_GC
 	object->isMarked = true;
 	if (vm.grayCapacity < vm.grayCount + 1) {
+		Obj** temp = NULL;
 		vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
-		vm.grayStack = realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+		temp = realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+		if (temp) {
+			vm.grayStack = temp;
+			temp = NULL;
+		}
+		else {
+			// TODO error
+		}
 	}
 	vm.grayStack[vm.grayCount++] = object; // TODO do not add strings and natives to the gray stack
 }
