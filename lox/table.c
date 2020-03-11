@@ -35,7 +35,7 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
 }
 
 bool tableSet(Table* table, ObjString* key, Value value) {
-	if (table->capacity * TABLE_MAX_LOAD < table->count + 1) {
+	if (table->capacity * TABLE_MAX_LOAD < (uint64_t)table->count + 1) {
 		int capcity = GROW_CAPACITY(table->capacity);
 		adjustCapacity(table, capcity);
 	}
