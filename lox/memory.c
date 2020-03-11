@@ -11,6 +11,8 @@
 #include "debug.h"
 #endif // DEBUG_LOG_GC
 
+#define GC_HEAP_GROWTH_FACTOR 2
+
 static void markRoots();
 static void traceReferences();
 static void blackenObject(Obj*);
@@ -19,10 +21,14 @@ static void sweep();
 static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
+	vm.bytesAllocated += newSize - oldSize;
 	if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
 		collectGarbage();
 #endif // DEBUG_STRESS_GC
+		if (vm.bytesAllocated > vm.nextGC) {
+			collectGarbage();
+		}
 	}
 	if (newSize == 0) {
 		free(previous);
@@ -34,13 +40,16 @@ void* reallocate(void* previous, size_t oldSize, size_t newSize) {
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
 	printf("-- gc begin\n");
+	size_t before = vm.bytesAllocated;
 #endif // DEBUG_LOG_GC
 	markRoots();
 	traceReferences();
 	tableRemoveWhite(&vm.strings);
 	sweep();
+	vm.nextGC = vm.bytesAllocated * GC_HEAP_GROWTH_FACTOR;
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
+	printf("   collected %ld bytes (from %ld to %ld) next at %ld\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
 #endif // DEBUG_LOG_GC
 }
 
