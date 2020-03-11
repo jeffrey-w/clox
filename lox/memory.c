@@ -68,6 +68,11 @@ void markObject(Obj* object) {
 	printf("\n");
 #endif // DEBUG_LOG_GC
 	object->isMarked = true;
+	if (vm.grayCapacity < vm.grayCount + 1) {
+		vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
+		vm.grayStack = realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
+	}
+	vm.grayStack[vm.grayCount++] = object;
 }
 
 void freeObjects() {
