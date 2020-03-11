@@ -15,6 +15,7 @@ static void markRoots();
 static void traceReferences();
 static void blackenObject(Obj*);
 static void markArray(ValueArray*);
+static void sweep();
 static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
@@ -36,6 +37,7 @@ void collectGarbage() {
 #endif // DEBUG_LOG_GC
 	markRoots();
 	traceReferences();
+	sweep();
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
 #endif // DEBUG_LOG_GC
@@ -119,6 +121,29 @@ void blackenObject(Obj* object) {
 void markArray(ValueArray* array) {
 	for (int i = 0; i < array->count; i++) {
 		markValue(array->values[i]);
+	}
+}
+
+void sweep() {
+	Obj* previous = NULL;
+	Obj* object = vm.objects;
+	while (object) {
+		if (object->isMarked) {
+			object->isMarked = false;
+			previous = object;
+			object = object->next;
+		}
+		else {
+			Obj* unreached = object;
+			object = object->next;
+			if (previous) {
+				previous->next = object;
+			}
+			else {
+				vm.objects = object;
+			}
+			freeObject(unreached);
+		}
 	}
 }
 
