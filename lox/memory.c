@@ -40,7 +40,14 @@ void markRoots() {
 	for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
 		markValue(*slot);
 	}
+	for (int i = 0; i < vm.frameCount; i++) {
+		markObject((Obj*)vm.frames[i].closure);
+	}
+	for (ObjUpvalue* upvalue = vm.openUpvalues; upvalue; upvalue = upvalue->next) {
+		markObject((Obj*)upvalue);
+	}
 	markTable(&vm.globals);
+	markCompilerRoots();
 }
 
 void markValue(Value value) {
