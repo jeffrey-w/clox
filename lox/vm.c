@@ -300,14 +300,16 @@ Value peek(int distance) {
 }
 
 void concatenate() {
-	ObjString* b = AS_STRING(pop());
-	ObjString* a = AS_STRING(pop());
+	ObjString* b = AS_STRING(peek(0));
+	ObjString* a = AS_STRING(peek(1));
 	int length = a->length + b->length;
 	char* data = ALLOCATE(char, length + 1);
 	memcpy(data, a->data, a->length);
 	memcpy(data + a->length, b->data, b->length);
 	data[length] = '\0';
 	ObjString* string = takeString(data, length);
+	pop();
+	pop();
 	push(OBJ_VAL(string));
 }
 
