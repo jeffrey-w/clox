@@ -49,7 +49,7 @@ void collectGarbage() {
 	vm.nextGC = vm.bytesAllocated * GC_HEAP_GROWTH_FACTOR;
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
-	printf("   collected %ld bytes (from %ld to %ld) next at %ld\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
+	printf("   collect %ld bytes (from %ld to %ld) next at %ld\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
 #endif // DEBUG_LOG_GC
 }
 
