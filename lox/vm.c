@@ -30,6 +30,9 @@ void initVM() {
 	initTable(&vm.strings);
 	loadNatives();
 	vm.objects = NULL;
+	vm.grayCount = 0;
+	vm.grayCapacity = 0;
+	vm.grayStack = NULL;
 }
 
 void resetStack() {
