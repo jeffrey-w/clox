@@ -12,6 +12,9 @@
 #endif // DEBUG_LOG_GC
 
 static void markRoots();
+static void traceReferences();
+static void blackenObject(Obj*);
+static void markArray(ValueArray*);
 static void freeObject(Obj*);
 
 void* reallocate(void* previous, size_t oldSize, size_t newSize) {
@@ -32,6 +35,7 @@ void collectGarbage() {
 	printf("-- gc begin\n");
 #endif // DEBUG_LOG_GC
 	markRoots();
+	traceReferences();
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
 #endif // DEBUG_LOG_GC
@@ -72,7 +76,50 @@ void markObject(Obj* object) {
 		vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
 		vm.grayStack = realloc(vm.grayStack, sizeof(Obj*) * vm.grayCapacity);
 	}
-	vm.grayStack[vm.grayCount++] = object;
+	vm.grayStack[vm.grayCount++] = object; // TODO do not add strings and natives to the gray stack
+}
+
+void traceReferences() {
+	while (vm.grayCount > 0) {
+		Obj* object = vm.grayStack[--vm.grayCount];
+		blackenObject(object);
+	}
+}
+
+void blackenObject(Obj* object) {
+#ifdef DEBUG_LOG_GC
+	printf("%p blacken ", (void*)object);
+	printValue(OBJ_VAL(object));
+	printf("\n");
+#endif // DEBUG_LOG_GC
+	switch (object->type) {
+	case OBJ_STRING:
+	case OBJ_NATIVE:
+		break;
+	case OBJ_UPVALUE:
+		markValue(((ObjUpvalue*)object)->closed);
+		break;
+	case OBJ_FUNCTION: {
+		ObjFunction* function = (ObjFunction*)object;
+		markObject((Obj*)function->name);
+		markArray(&function->chunk.constants);
+		break;
+	}
+	case OBJ_CLOSURE: {
+		ObjClosure* closure = (ObjClosure*)object;
+		markObject((Obj*)closure->function);
+		for (int i = 0; i < closure->upvalueCount; i++) {
+			markObject((Obj*)closure->upvalues[i]);
+		}
+		break;
+	}
+	}
+}
+
+void markArray(ValueArray* array) {
+	for (int i = 0; i < array->count; i++) {
+		markValue(array->values[i]);
+	}
 }
 
 void freeObjects() {
