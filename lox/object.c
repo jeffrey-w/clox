@@ -66,6 +66,7 @@ void printObject(Value value) {
 		break;
 	case OBJ_CLOSURE:
 		printFunction(AS_CLOSURE(value)->function);
+		break;
 	case OBJ_CLASS:
 		printf("%s", AS_CLASS(value)->name->data);
 		break;
