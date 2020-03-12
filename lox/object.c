@@ -14,7 +14,7 @@
 	(type*)allocateObject(sizeof(type), objectType);
 
 static Obj* allocateObject(size_t, ObjType);
-static char* prettyPrintType(ObjType);
+static char* printType(ObjType);
 static void printFunction(ObjFunction*);
 static uint32_t hashString(const char*, int);
 static ObjString* allocateString(char*, int, uint32_t);
@@ -26,12 +26,12 @@ Obj* allocateObject(size_t size, ObjType type) {
 	object->next = vm.objects;
 	vm.objects = object;
 #ifdef DEBUG_LOG_GC
-	printf("%p allocate %ld bytes for %s\n", (void*)object, size, prettyPrintType(type));
+	printf("%p allocate %ld bytes for %s\n", (void*)object, size, printType(type));
 #endif // DEBUG_LOG_GC
 	return object;
 }
 
-char* prettyPrintType(ObjType type) {
+char* printType(ObjType type) {
 	switch (type) {
 	case OBJ_STRING:
 		return "string";
