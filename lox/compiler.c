@@ -575,7 +575,7 @@ void dot(bool canAssign) {
 		emitBytes(OP_SET_PROPERTY, name);
 	}
 	else {
-		(OP_GET_PROPERTY, name);
+		emitBytes(OP_GET_PROPERTY, name);
 	}
 }
 
