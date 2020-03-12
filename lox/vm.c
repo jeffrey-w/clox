@@ -53,6 +53,9 @@ void loadNatives() {
 	defineNative("bytes_allocated", bytesAllocated);
 	defineNative("next_gc", nextGC);
 	defineNative("gc", gc);
+	defineNative("print_stack", printStack);
+	defineNative("print_globals", printGlobals);
+	defineNative("print_strings", printStrings);
 #endif // DEBUG_DEV_TOOLS
 }
 
