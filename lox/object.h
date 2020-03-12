@@ -2,6 +2,7 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "table.h"
 #include "value.h"
 
 #define OBJ_TYPE(value)         (AS_OBJ(value)->type)
@@ -72,6 +73,12 @@ typedef struct sObjClass {
 	Obj obj;
 	ObjString* name;
 } ObjClass;
+
+typedef struct {
+	Obj obj;
+	ObjClass* cls;
+	Table fields;
+} ObjInstance;
 
 void printObject(Value);
 ObjString* copyString(const char*, int);
