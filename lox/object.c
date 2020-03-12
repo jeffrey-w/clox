@@ -43,6 +43,8 @@ char* prettyPrintType(ObjType type) {
 		return "function";
 	case OBJ_CLOSURE:
 		return "closure";
+	case OBJ_CLASS:
+		return "class";
 	default:
 		"unknown object";
 	}
