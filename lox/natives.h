@@ -8,4 +8,6 @@
 Value clockNative(int, Value*);
 Value scanNative(int, Value*);
 Value sinNative(int, Value*);
-// TODO scan and sin
+Value bytesAllocated(int, Value*);
+Value nextGC(int, Value*);
+Value gc(int, Value*);
