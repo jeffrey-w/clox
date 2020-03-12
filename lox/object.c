@@ -66,6 +66,9 @@ void printObject(Value value) {
 		break;
 	case OBJ_CLOSURE:
 		printFunction(AS_CLOSURE(value)->function);
+	case OBJ_CLASS:
+		printf("%s", AS_CLASS(value)->name->data);
+		break;
 	default:
 		break; // TODO need internal error logic
 	}
