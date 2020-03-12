@@ -138,6 +138,12 @@ void blackenObject(Obj* object) {
 		markObject((Obj*)cls->name);
 		break;
 	}
+	case OBJ_INSTANCE: {
+		ObjInstance* instance = (ObjInstance*)object;
+		markObject((Obj*)instance->cls);
+		markTable(&instance->fields);
+		break;
+	}
 	}
 }
 
@@ -204,6 +210,15 @@ void freeObject(Obj* object) {
 		ObjClosure* closure = (ObjClosure*)object;
 		FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
 		FREE(ObjClosure, object);
+	}
+	case OBJ_CLASS:
+		FREE(ObjClass, object);
+		break;
+	case OBJ_INSTANCE: {
+		ObjInstance* instance = (ObjInstance*)object;
+		freeTable(&instance->fields);
+		FREE(ObjInstance, object);
+		break;
 	}
 	default:
 		break; // TODO need internal error logic
