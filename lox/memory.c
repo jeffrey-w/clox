@@ -133,6 +133,11 @@ void blackenObject(Obj* object) {
 		}
 		break;
 	}
+	case OBJ_CLASS: {
+		ObjClass* cls = (ObjClass*)object;
+		markObject((Obj*)cls->name);
+		break;
+	}
 	}
 }
 
