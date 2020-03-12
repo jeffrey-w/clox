@@ -46,7 +46,7 @@ char* printType(ObjType type) {
 	case OBJ_CLASS:
 		return "class";
 	default:
-		"unknown object";
+		return "unknown object";
 	}
 }
 
