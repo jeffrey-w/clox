@@ -27,16 +27,16 @@ static bool call(ObjClosure*, int);
 static void runtimeError(const char*, ...);
 
 void initVM() {
-	resetStack();
-	initTable(&vm.globals);
-	initTable(&vm.strings);
-	loadNatives();
 	vm.bytesAllocated = 0;
 	vm.nextGC = DEFAULT_NEXT_GC;
 	vm.objects = NULL;
 	vm.grayCount = 0;
 	vm.grayCapacity = 0;
 	vm.grayStack = NULL;
+	resetStack();
+	initTable(&vm.globals);
+	initTable(&vm.strings);
+	loadNatives();
 }
 
 void resetStack() {
@@ -49,6 +49,11 @@ void loadNatives() {
 	defineNative("clock", clockNative);
 	defineNative("scan", scanNative);
 	defineNative("sin", sinNative);
+#ifdef DEBUG_DIAG_TOOLS
+	defineNative("bytes_allocated", bytesAllocated);
+	defineNative("next_gc", nextGC);
+	defineNative("gc", gc);
+#endif // DEBUG_DEV_TOOLS
 }
 
 void defineNative(const char* name, NativeFn function) {
