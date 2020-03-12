@@ -45,6 +45,8 @@ char* printType(ObjType type) {
 		return "closure";
 	case OBJ_CLASS:
 		return "class";
+	case OBJ_INSTANCE:
+		return "instance";
 	default:
 		return "unknown object";
 	}
@@ -69,6 +71,9 @@ void printObject(Value value) {
 		break;
 	case OBJ_CLASS:
 		printf("%s", AS_CLASS(value)->name->data);
+		break;
+	case OBJ_INSTANCE:
+		printf("%s instance", AS_INSTANCE(value)->cls->name->data);
 		break;
 	default:
 		break; // TODO need internal error logic
