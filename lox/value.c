@@ -40,7 +40,7 @@ bool valuesEqual(Value a, Value b) {
 		return AS_OBJ(a) == AS_OBJ(b);
 	}
 	default:
-		break; // TODO need internal error logic
+		return false; // TODO need internal error logic
 	}
 }
 
