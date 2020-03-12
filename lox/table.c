@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,6 +11,7 @@
 
 static void adjustCapacity(Table*, int);
 static Entry* findEntry(Entry*, int, ObjString*);
+static int size(Table*); // TODO make this a field
 
 void initTable(Table* table) {
 	table->count = 0;
@@ -40,7 +42,7 @@ bool tableSet(Table* table, ObjString* key, Value value) {
 		adjustCapacity(table, capcity);
 	}
 	Entry* entry = findEntry(table->entries, table->capacity, key);
-	bool isNewKey = entry->key == NULL;
+	bool isNewKey = !entry->key;
 	if (isNewKey && IS_NIL(entry->value)) {
 		table->count++;
 	}
@@ -134,6 +136,37 @@ Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
 		}
 		index = (index + 1) & (capacity - 1);
 	}
+}
+
+void printTable(Table* table, bool withValues) {
+	int count = 0, limit = size(table);
+	printf("[");
+	for (int i = 0; i < table->capacity; i++) {
+		Entry* entry = &table->entries[i];
+		if (entry->key) {
+			count++;
+			printf("%s", entry->key->data);
+			if (withValues) {
+				printf(": ");
+				printValue(entry->value);
+			}
+			if (count < limit) {
+				printf(", ");
+			}
+		}
+	}
+	printf("]\n");
+}
+
+int size(Table* table) {
+	int size = 0;
+	for (int i = 0; i < table->capacity; i++) {
+		Entry* entry = &table->entries[i];
+		if (entry->key) {
+			size++;
+		}
+	}
+	return size;
 }
 
 void markTable(Table* table) {
