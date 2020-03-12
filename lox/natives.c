@@ -15,8 +15,8 @@ Value scanNative(int argCount, Value* args) { // TODO this is not robust (e.g. f
 	char* buffer = NULL;
 	do {
 		if (size < len + 1) {
-			int old = size;
-			int size = GROW_CAPACITY(old);
+			size_t old = size;
+			size = GROW_CAPACITY(old);
 			buffer = GROW_ARRAY(buffer, char, old, size);
 		}
 		buffer[len++] = fgetc(stdin);
@@ -40,5 +40,25 @@ Value nextGC(int argCount, Value* args) {
 
 Value gc(int argCount, Value* args) {
 	collectGarbage();
+	return NIL_VAL;
+}
+
+Value printStack(int argCount, Value* args) {
+	for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+		printf("[ ");
+		printValue(*slot);
+		printf(" ]");
+	}
+	printf("\n");
+	return NIL_VAL;
+}
+
+Value printGlobals(int argCount, Value* args) {
+	printTable(&vm.globals, true);
+	return NIL_VAL;
+}
+
+Value printStrings(int argCount, Value* args) {
+	printTable(&vm.strings, false);
 	return NIL_VAL;
 }

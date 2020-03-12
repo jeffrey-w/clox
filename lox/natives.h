@@ -11,3 +11,6 @@ Value sinNative(int, Value*);
 Value bytesAllocated(int, Value*);
 Value nextGC(int, Value*);
 Value gc(int, Value*);
+Value printStack(int, Value*);
+Value printGlobals(int, Value*);
+Value printStrings(int, Value*);
