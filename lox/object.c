@@ -154,3 +154,9 @@ ObjClosure* newClosure(ObjFunction* function) {
 	closure->upvalueCount = function->upvalueCount;
 	return closure;
 }
+
+ObjClass* newClass(ObjString* name) {
+	ObjClass* cls = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+	cls->name = name;
+	return cls;
+}
