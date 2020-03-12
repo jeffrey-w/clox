@@ -373,6 +373,11 @@ bool callValue(Value callee, int argCount) {
 		}
 		case OBJ_CLOSURE:
 			return call(AS_CLOSURE(callee), argCount);
+		case OBJ_CLASS: {
+			ObjClass* cls = AS_CLASS(callee);
+			vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(cls));
+			return true;
+		}
 		default:
 			// Non-callable object type.
 			break;
