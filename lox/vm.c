@@ -14,7 +14,7 @@
 #define DEFAULT_NEXT_GC 0x100000
 
 static void resetStack();
-static void loadNatives();
+static void initEnv();
 static void defineNative(const char*, NativeFn);
 static InterpretResult run();
 static Value peek(int);
@@ -38,7 +38,7 @@ void initVM() {
 	resetStack();
 	initTable(&vm.globals);
 	initTable(&vm.strings);
-	loadNatives();
+	initEnv();
 }
 
 void resetStack() {
@@ -47,7 +47,8 @@ void resetStack() {
 	vm.openUpvalues = NULL;
 }
 
-void loadNatives() {
+void initEnv() {
+	vm.initString = copyString("init", 4);
 	defineNative("clock", clockNative);
 	defineNative("scan", scanNative);
 	defineNative("sin", sinNative);
@@ -73,6 +74,7 @@ void freeVM() {
 	freeTable(&vm.globals);
 	freeTable(&vm.strings);
 	freeObjects();
+	vm.initString = NULL;
 }
 
 InterpretResult interpret(const char* source) {
@@ -431,8 +433,15 @@ bool callValue(Value callee, int argCount) {
 		case OBJ_CLOSURE:
 			return call(AS_CLOSURE(callee), argCount);
 		case OBJ_CLASS: {
+			Value initializer;
 			ObjClass* cls = AS_CLASS(callee);
 			vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(cls));
+			if (tableGet(&cls->methods, vm.initString, &initializer)) {
+				return call(AS_CLOSURE(initializer), argCount);
+			}
+			else if (argCount != 0) {
+				runtimeError("Expected 0 arguments but got %d.", argCount);
+			}
 			return true;
 		}
 		case OBJ_BOUND_METHOD: {
