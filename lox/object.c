@@ -45,6 +45,8 @@ char* printType(ObjType type) {
 		return "closure";
 	case OBJ_CLASS:
 		return "class";
+	case OBJ_BOUND_METHOD:
+		return "bound method";
 	case OBJ_INSTANCE:
 		return "instance";
 	default:
