@@ -23,6 +23,7 @@ static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
 static void closeUpvalues(Value*);
 static void defineMethod(ObjString*);
+static bool bindMethod(ObjClass*, ObjString*);
 static bool callValue(Value, int);
 static bool call(ObjClosure*, int);
 static void runtimeError(const char*, ...);
@@ -193,8 +194,10 @@ InterpretResult run() {
 				push(value);
 				break;
 			}
-			runtimeError("Undefined property '%s'.", name->data);
-			return INTERPRET_RUNTIME_ERROR;
+			if (!bindMethod(instance->cls, name)) {
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			break;
 		}
 		case OP_SET_PROPERTY: {
 			if (!IS_INSTANCE(peek(1))) {
@@ -400,6 +403,18 @@ void defineMethod(ObjString* name) {
 	ObjClass* cls = AS_CLASS(peek(1));
 	tableSet(&cls->methods, name, method);
 	pop();
+}
+
+bool bindMethod(ObjClass* cls, ObjString* name) {
+	Value method;
+	if (!tableGet(&cls->methods, name, &method)) {
+		runtimeError("Undefined property '%s'.", name->data);
+		return false;
+	}
+	ObjBoundMethod* bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+	pop();
+	push(OBJ_VAL(bound));
+	return true;
 }
 
 bool callValue(Value callee, int argCount) {
