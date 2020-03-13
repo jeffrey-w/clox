@@ -8,6 +8,7 @@ static int simpleInstruction(const char*, int);
 static int constantInstruction(const char*, Chunk*, int);
 static int byteInstruction(const char*, Chunk*, int);
 static int jumpInstruction(const char*, int, Chunk*, int);
+static int invokeInstruction(const char*, Chunk*, int);
 
 void disassembleChunk(Chunk* chunk, const char* name) {
 	printf("<%s>\n", name);
@@ -83,6 +84,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
 		return jumpInstruction("OP_LOOP", -1, chunk, offset);
 	case OP_CALL:
 		return byteInstruction("OP_CALL", chunk, offset);
+	case OP_INVOKE:
+		return invokeInstruction("OP_INVOKE", chunk, offset);
 	case OP_CLOSURE: {
 		offset++;
 		uint8_t constant = chunk->code[offset++];
@@ -136,4 +139,13 @@ int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
 	jump |= chunk->code[offset + 2];
 	printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
 	return offset + 3;
+}
+
+int invokeInstruction(const char* name, Chunk* chunk, int offset) {
+	uint8_t constant = chunk->code[offset + 1];
+	uint8_t argCount = chunk->code[offset + 2];
+	printf("%-16s (%d args) %4d '", name, argCount, constant);
+	printValue(chunk->constants.values[constant]);
+	printf("'\n");
+	return offset + 2;
 }
