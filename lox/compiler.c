@@ -193,9 +193,9 @@ void classDeclaration() {
 	Token className = parser.previous;
 	uint8_t nameConstant = identifierConstant(&className);
 	declareVariable();
-	namedVariable(className, false);
 	emitBytes(OP_CLASS, nameConstant);
 	defineVariable(nameConstant);
+	namedVariable(className, false);
 	consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
 	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
 		method();
@@ -207,9 +207,9 @@ void classDeclaration() {
 void method() {
 	consume(TOKEN_IDENTIFIER, "Expect method name.");
 	uint8_t constant = identifierConstant(&parser.previous);
-	emitBytes(OP_METHOD, constant);
 	FunctionType type = TYPE_FUNCTION;
 	function(type);
+	emitBytes(OP_METHOD, constant);
 }
 
 void funDeclaration() {
