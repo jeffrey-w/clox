@@ -173,6 +173,13 @@ ObjClass* newClass(ObjString* name) {
 	return cls;
 }
 
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
+	ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+	bound->receiver = receiver;
+	bound->method = method;
+	return bound;
+}
+
 ObjInstance* newInstance(ObjClass* cls) {
 	ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
 	instance->cls = cls;
