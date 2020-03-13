@@ -202,6 +202,9 @@ void classDeclaration() {
 	declareVariable();
 	emitBytes(OP_CLASS, nameConstant);
 	defineVariable(nameConstant);
+	ClassCompiler classCompiler;
+	classCompiler.name = parser.previous;
+	currentClass = &classCompiler;
 	namedVariable(className, false);
 	consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
 	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
@@ -209,6 +212,7 @@ void classDeclaration() {
 	}
 	consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
 	emitByte(OP_POP);
+	currentClass = currentClass->enclosing;
 }
 
 void method() {
@@ -678,6 +682,10 @@ void grouping(bool canAssign) {
 }
 
 void this_(bool canAssign) {
+	if (!currentClass) {
+		error("Cannot use 'this' outside of a class.");
+		return;
+	}
 	variable(false);
 }
 
