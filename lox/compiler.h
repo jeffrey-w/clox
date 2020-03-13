@@ -59,7 +59,13 @@ typedef struct sCompiler {
     int scopeDepth;
 } Compiler;
 
+typedef struct sClassCompiler {
+    struct sClassCompiler* enclosing;
+    Token name;
+} ClassCompiler;;
+
 Compiler* current;
+ClassCompiler* currentClass;
 Parser parser;
 
 ObjFunction* compile(const char*);
