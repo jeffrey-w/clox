@@ -48,7 +48,7 @@ void resetStack() {
 }
 
 void initEnv() {
-	vm.initString = copyString("init", 4);
+	vm.initString = copyString("init", 4); // TODO avoid magic constants
 	defineNative("clock", clockNative);
 	defineNative("scan", scanNative);
 	defineNative("sin", sinNative);
