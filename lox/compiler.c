@@ -58,6 +58,7 @@ static void binary(bool);
 static void and_(bool);
 static void or_(bool);
 static void grouping(bool);
+static void this_(bool);
 static void variable(bool);
 static void namedVariable(Token, bool);
 static int resolveLocal(Compiler*, Token*);
@@ -111,7 +112,7 @@ ParseRule rules[] = {
   { NULL,     NULL,    PREC_NONE },       // TOKEN_PRINT
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RETURN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_SUPER
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_THIS
+  { this_,    NULL,    PREC_NONE },       // TOKEN_THIS
   { literal,  NULL,    PREC_NONE },       // TOKEN_TRUE
   { NULL,     NULL,    PREC_NONE },       // TOKEN_VAR
   { NULL,     NULL,    PREC_NONE },       // TOKEN_WHILE
@@ -147,8 +148,14 @@ void initComplier(Compiler* compiler, FunctionType type) {
 	Local* local = &current->locals[current->localCount++];
 	local->depth = 0;
 	local->isCaptured = false;
-	local->name.start = "";
-	local->name.length = 0;
+	if (type != TYPE_FUNCTION) {
+		local->name.start = "this";
+		local->name.length = 4;
+	}
+	else {
+		local->name.start = "";
+		local->name.length = 0;
+	}
 }
 
 void advance() {
@@ -207,7 +214,7 @@ void classDeclaration() {
 void method() {
 	consume(TOKEN_IDENTIFIER, "Expect method name.");
 	uint8_t constant = identifierConstant(&parser.previous);
-	FunctionType type = TYPE_FUNCTION;
+	FunctionType type = TYPE_METHOD;
 	function(type);
 	emitBytes(OP_METHOD, constant);
 }
@@ -668,6 +675,10 @@ void or_(bool canAssign) {
 void grouping(bool canAssign) {
 	expression();
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+
+void this_(bool canAssign) {
+	variable(false);
 }
 
 void variable(bool canAssign) {
