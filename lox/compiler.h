@@ -20,6 +20,7 @@ typedef enum {
 typedef enum {
     TYPE_FUNCTION,
     TYPE_METHOD,
+    TYPE_INITIALIZER,
     TYPE_SCRIPT
 } FunctionType;
 
