@@ -66,6 +66,7 @@ void markRoots() {
 	}
 	markTable(&vm.globals);
 	markCompilerRoots();
+	markObject((Obj*)vm.initString);
 }
 
 void markValue(Value value) {
