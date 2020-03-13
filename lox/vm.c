@@ -26,6 +26,8 @@ static void defineMethod(ObjString*);
 static bool bindMethod(ObjClass*, ObjString*);
 static bool callValue(Value, int);
 static bool call(ObjClosure*, int);
+static bool invoke(ObjString*, int);
+static bool invokeFromClass(ObjClass*, ObjString*, int);
 static void runtimeError(const char*, ...);
 
 void initVM() {
@@ -287,6 +289,15 @@ InterpretResult run() {
 			frame = &vm.frames[vm.frameCount - 1];
 			break;
 		}
+		case OP_INVOKE: {
+			ObjString* method = READ_STRING();
+			int argCount = READ_BYTE();
+			if (!invoke(method, argCount)) {
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			frame = &vm.frames[vm.frameCount - 1];
+			break;
+		}
 		case OP_CLOSURE: {
 			ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
 			ObjClosure* closure = newClosure(function);
@@ -472,6 +483,25 @@ bool call(ObjClosure* closure, int argCount) {
 	frame->ip = closure->function->chunk.code;
 	frame->slots = vm.stackTop - argCount - 1;
 	return true;
+}
+
+bool invoke(ObjString* name, int argCount) {
+	Value receiver = peek(argCount);
+	if (!IS_INSTANCE(receiver)) {
+		runtimeError("Only instances have methods.");
+		return false;
+	}
+	ObjInstance* instance = AS_INSTANCE(receiver);
+	return invokeFromClass(instance->cls, name, argCount);
+}
+
+bool invokeFromClass(ObjClass* cls, ObjString* name, int argCount) {
+	Value method;
+	if (!tableGet(&cls->methods, name, &method)) {
+		runtimeError("Undefined property '%s'.", name->data);
+		return false;
+	}
+	return call(AS_CLOSURE(method), argCount);
 }
 
 
