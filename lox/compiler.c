@@ -219,6 +219,9 @@ void method() {
 	consume(TOKEN_IDENTIFIER, "Expect method name.");
 	uint8_t constant = identifierConstant(&parser.previous);
 	FunctionType type = TYPE_METHOD;
+	if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) { // TODO avoid magic constants
+		type = TYPE_INITIALIZER;
+	}
 	function(type);
 	emitBytes(OP_METHOD, constant);
 }
@@ -373,6 +376,9 @@ void returnStatement() {
 		emitReturn();
 	}
 	else {
+		if (current->type == TYPE_INITIALIZER) {
+			error("Cannot return a type from an initializer.");
+		}
 		expression();
 		consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
 		emitByte(OP_RETURN);
@@ -804,7 +810,12 @@ void emitLoop(int loopStart) {
 }
 
 void emitReturn() {
-	emitByte(OP_NIL);
+	if (current->type == TYPE_INITIALIZER) {
+		emitBytes(OP_GET_LOCAL, 0);
+	}
+	else {
+		emitByte(OP_NIL);
+	}
 	emitByte(OP_RETURN);
 }
 
