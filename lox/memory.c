@@ -186,7 +186,7 @@ void sweep() {
 
 void freeObjects() {
 	Obj* object = vm.objects;
-	while (object != NULL) {
+	while (object) {
 		Obj* next = object->next;
 		freeObject(object);
 		object = next;
