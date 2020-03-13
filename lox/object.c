@@ -76,6 +76,7 @@ void printObject(Value value) {
 		break;
 	case OBJ_BOUND_METHOD:
 		printFunction(AS_BOUND_METHOD(value)->method->function);
+		break;
 	case OBJ_INSTANCE:
 		printf("%s instance", AS_INSTANCE(value)->cls->name->data);
 		break;
