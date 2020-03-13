@@ -19,6 +19,7 @@ static void advance();
 static void consume(TokenType, const char*);
 static void declaration();
 static void classDeclaration();
+static void method();
 static void funDeclaration();
 static void function(FunctionType);
 static void varDeclaration();
@@ -189,12 +190,26 @@ void declaration() {
 
 void classDeclaration() {
 	consume(TOKEN_IDENTIFIER, "Expect class name.");
-	uint8_t nameConstant = identifierConstant(&parser.previous);
+	Token className = parser.previous;
+	uint8_t nameConstant = identifierConstant(&className);
 	declareVariable();
+	namedVariable(className, false);
 	emitBytes(OP_CLASS, nameConstant);
 	defineVariable(nameConstant);
 	consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+	while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+		method();
+	}
 	consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+	emitByte(OP_POP);
+}
+
+void method() {
+	consume(TOKEN_IDENTIFIER, "Expect method name.");
+	uint8_t constant = identifierConstant(&parser.previous);
+	emitBytes(OP_METHOD, constant);
+	FunctionType type = TYPE_FUNCTION;
+	function(type);
 }
 
 void funDeclaration() {
