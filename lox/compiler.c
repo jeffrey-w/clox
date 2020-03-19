@@ -19,6 +19,7 @@ static void advance();
 static void consume(TokenType, const char*);
 static void declaration();
 static void classDeclaration();
+static Token syntheticToken(const char* );
 static void method();
 static void funDeclaration();
 static void function(FunctionType);
@@ -204,6 +205,8 @@ void classDeclaration() {
 	defineVariable(nameConstant);
 	ClassCompiler classCompiler;
 	classCompiler.name = parser.previous;
+	classCompiler.hasSuperclass = false;
+	classCompiler.enclosing = currentClass;
 	currentClass = &classCompiler;
 	if (match(TOKEN_LESS)) {
 		consume(TOKEN_IDENTIFIER, "Expect superclass name.");
@@ -211,8 +214,12 @@ void classDeclaration() {
 		if (identifiersEqual(&className, &parser.previous)) {
 			error("A class cannot inherit from itself.");
 		}
+		beginScope();
+		addLocal(syntheticToken("super"));
+		defineVariable(0);
 		namedVariable(className, false);
 		emitByte(OP_INHERIT);
+		classCompiler.hasSuperclass = true;
 	}
 	namedVariable(className, false);
 	consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
@@ -221,7 +228,17 @@ void classDeclaration() {
 	}
 	consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
 	emitByte(OP_POP);
+	if (classCompiler.hasSuperclass) {
+		endScope();
+	}
 	currentClass = currentClass->enclosing;
+}
+
+Token syntheticToken(const char* text) {
+	Token token;
+	token.start = text;
+	token.length = (int)strlen(text);
+	return token;
 }
 
 void method() {
