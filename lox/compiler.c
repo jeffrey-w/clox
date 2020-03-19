@@ -59,6 +59,7 @@ static void binary(bool);
 static void and_(bool);
 static void or_(bool);
 static void grouping(bool);
+static void super_(bool);
 static void this_(bool);
 static void variable(bool);
 static void namedVariable(Token, bool);
@@ -112,7 +113,7 @@ ParseRule rules[] = {
   { NULL,     or_,     PREC_OR },         // TOKEN_OR
   { NULL,     NULL,    PREC_NONE },       // TOKEN_PRINT
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RETURN
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_SUPER
+  { super_,   NULL,    PREC_NONE },       // TOKEN_SUPER
   { this_,    NULL,    PREC_NONE },       // TOKEN_THIS
   { literal,  NULL,    PREC_NONE },       // TOKEN_TRUE
   { NULL,     NULL,    PREC_NONE },       // TOKEN_VAR
@@ -716,6 +717,21 @@ void or_(bool canAssign) {
 void grouping(bool canAssign) {
 	expression();
 	consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+}
+
+void super_(bool canAssign) {
+	if (!currentClass) {
+		error("Cannot use 'super' outside of a class.");
+	}
+	else if (!currentClass->hasSuperclass) {
+		error("Cannot use 'super' in a class with no superclass.");
+	}
+	consume(TOKEN_DOT, "Expect '.' after 'super'");
+	consume(TOKEN_IDENTIFIER, "Expect superclass method name.");
+	uint8_t name = identifierConstant(&parser.previous);
+	namedVariable(syntheticToken("this"), false);
+	namedVariable(syntheticToken("super"), false);
+	emitBytes(OP_GET_SUPER, name);
 }
 
 void this_(bool canAssign) {
