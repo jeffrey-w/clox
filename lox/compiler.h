@@ -63,6 +63,7 @@ typedef struct sCompiler {
 typedef struct sClassCompiler {
     struct sClassCompiler* enclosing;
     Token name;
+    bool hasSuperclass;
 } ClassCompiler;;
 
 Compiler* current;
