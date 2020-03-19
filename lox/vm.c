@@ -215,6 +215,14 @@ InterpretResult run() {
 			push(value);
 			break;
 		}
+		case OP_GET_SUPER: {
+			ObjString* name = READ_STRING();
+			ObjClass* superclass = AS_CLASS(pop());
+			if (!bindMethod(superclass, name)) {
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			break;
+		}
 		case OP_EQUAL: {
 			Value b = pop();
 			Value a = pop();
