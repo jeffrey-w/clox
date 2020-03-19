@@ -204,9 +204,9 @@ void classDeclaration() {
 	emitBytes(OP_CLASS, nameConstant);
 	defineVariable(nameConstant);
 	ClassCompiler classCompiler;
+	classCompiler.enclosing = currentClass;
 	classCompiler.name = parser.previous;
 	classCompiler.hasSuperclass = false;
-	classCompiler.enclosing = currentClass;
 	currentClass = &classCompiler;
 	if (match(TOKEN_LESS)) {
 		consume(TOKEN_IDENTIFIER, "Expect superclass name.");
