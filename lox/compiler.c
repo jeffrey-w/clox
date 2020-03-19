@@ -16,10 +16,10 @@
 
 static void initComplier(Compiler*, FunctionType);
 static void advance();
+static Token syntheticToken(const char* );
 static void consume(TokenType, const char*);
 static void declaration();
 static void classDeclaration();
-static Token syntheticToken(const char* );
 static void method();
 static void funDeclaration();
 static void function(FunctionType);
@@ -171,6 +171,13 @@ void advance() {
 	}
 }
 
+Token syntheticToken(const char* text) {
+	Token token;
+	token.start = text;
+	token.length = (int)strlen(text);
+	return token;
+}
+
 void consume(TokenType type, const char* message) {
 	if (parser.current.type == type) {
 		advance();
@@ -233,13 +240,6 @@ void classDeclaration() {
 		endScope();
 	}
 	currentClass = currentClass->enclosing;
-}
-
-Token syntheticToken(const char* text) {
-	Token token;
-	token.start = text;
-	token.length = (int)strlen(text);
-	return token;
 }
 
 void method() {
