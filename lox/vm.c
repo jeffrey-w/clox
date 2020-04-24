@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +12,7 @@
 #include "value.h"
 #include "vm.h"
 
+#define DEFAULT_PRECISION 0x10
 #define DEFAULT_NEXT_GC 0x100000
 
 static void resetStack();
@@ -18,6 +20,7 @@ static void initEnv();
 static void defineNative(const char*, NativeFn);
 static InterpretResult run();
 static Value peek(int);
+static void stringify(Value, int);
 static void concatenate();
 static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
@@ -101,15 +104,15 @@ InterpretResult run() {
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op) \
-    do { \
-      if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
-        runtimeError("Operands must be numbers."); \
-        return INTERPRET_RUNTIME_ERROR; \
-      } \
-      double b = AS_NUMBER(pop()); \
-      double a = AS_NUMBER(pop()); \
-      push(valueType(a op b)); \
-    } while (false)
+	do { \
+	  if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+		runtimeError("Operands must be numbers."); \
+		return INTERPRET_RUNTIME_ERROR; \
+	  } \
+	  double b = AS_NUMBER(pop()); \
+	  double a = AS_NUMBER(pop()); \
+	  push(valueType(a op b)); \
+	} while (false)
 	while (true) {
 #ifdef DEBUG_TRACE_EXECUTION
 		printf("          ");
@@ -236,7 +239,9 @@ InterpretResult run() {
 			BINARY_OP(BOOL_VAL, < );
 			break;
 		case OP_ADD:
-			if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+			if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
+				stringify(peek(0), 0);
+				stringify(peek(1), 1);
 				concatenate();
 			}
 			else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
@@ -244,8 +249,8 @@ InterpretResult run() {
 				double a = AS_NUMBER(pop());
 				push(NUMBER_VAL(a + b));
 			}
-			else { // TODO if one argument is a string, stringify and concatenate the other
-				runtimeError("Operands must be two numbers or two strings.");
+			else {
+				runtimeError("Operands must be two numbers or at least one must be a string.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
 			break;
@@ -387,6 +392,41 @@ Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
 }
 
+void stringify(Value value, int distance) {
+	ObjString* string = NULL;
+	switch (value.type) {
+	case VAL_BOOL:
+		if (AS_BOOL(value)) {
+			string = takeString("true", 4);
+		}
+		else {
+			string = takeString("false", 5);
+		}
+		break;
+	case VAL_NIL:
+		string = takeString("nil", 3);
+		break;
+	case VAL_NUMBER: {
+		// TODO
+		break;
+	}
+	case VAL_OBJ: {
+		Obj* obj = AS_OBJ(value);
+		switch (obj->type) {
+		case OBJ_STRING:
+			string = AS_STRING(value);
+			break;
+		default:
+			string = takeString("Object", 6);
+		}
+		break;
+	}
+	default:
+		break; // TODO need internal error logic
+	}
+	vm.stackTop[-1 - distance] = OBJ_VAL(string);
+}
+
 void concatenate() {
 	ObjString* b = AS_STRING(peek(0));
 	ObjString* a = AS_STRING(peek(1));
@@ -464,7 +504,7 @@ bool callValue(Value callee, int argCount) {
 		switch (OBJ_TYPE(callee)) {
 		case OBJ_NATIVE: {
 			NativeFn native = AS_NATIVE(callee);
-			// TODO add support for runtime catching runtime errors
+			// TODO add support for catching runtime errors
 			Value result = native(argCount, vm.stackTop - argCount);
 			vm.stackTop -= argCount + 1;
 			push(result);
