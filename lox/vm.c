@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "memory.h"
 #include "natives.h"
+#include "ryu/ryu.h"
 #include "value.h"
 #include "vm.h"
 
@@ -407,7 +408,8 @@ void stringify(Value value, int distance) {
 		string = takeString("nil", 3);
 		break;
 	case VAL_NUMBER: {
-		// TODO
+		char* data = d2s(AS_NUMBER(value));
+		string = takeString(data, strlen(data)); // TODO don't use strlen
 		break;
 	}
 	case VAL_OBJ: {
