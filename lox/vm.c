@@ -411,14 +411,7 @@ void stringify(Value value, int distance) {
 		break;
 	}
 	case VAL_OBJ: {
-		Obj* obj = AS_OBJ(value);
-		switch (obj->type) {
-		case OBJ_STRING:
-			string = AS_STRING(value);
-			break;
-		default:
-			string = takeString("Object", 6);
-		}
+		string = toString(value);
 		break;
 	}
 	default:
