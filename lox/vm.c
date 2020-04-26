@@ -435,11 +435,9 @@ void concatenate() {
 }
 
 bool isFalsey(Value value) {
-	//if (IS_NUMBER(value)) {
-	//	return AS_NUMBER(value) == 0;
-	//}
-	// TODO should 0 == false?
-	return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+	return (IS_NIL(value))
+		|| (IS_NUMBER(value) && !AS_NUMBER(value))
+		|| (IS_BOOL(value) && !AS_BOOL(value));
 }
 
 ObjUpvalue* captureUpvalue(Value* local) {
