@@ -112,6 +112,60 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
+ObjString* toString(Value value) {
+	ObjString* string = NULL;
+	switch (OBJ_TYPE(value)) {
+	case OBJ_STRING:
+		string = AS_STRING(value);
+		break;
+	case OBJ_NATIVE:
+		string = takeString("<native fn>", 11);
+		break;
+	case OBJ_FUNCTION:
+	case OBJ_CLOSURE:
+	case OBJ_BOUND_METHOD: {
+		ObjFunction * function;
+		if (IS_FUNCTION(value)) {
+			function = AS_FUNCTION(value);
+		}
+		else if (IS_CLOSURE(value)) {
+			function = AS_CLOSURE(value)->function;
+		}
+		else {
+			function = AS_BOUND_METHOD(value)->method->function;
+		}
+		if (!function->name) {
+			string = takeString("<script>", 8);
+		}
+		else {
+			int length = function->name->length + 5;
+			char* data = ALLOCATE(char, length);
+			memcpy(data, "<fn ", 4);
+			memcpy(data + 4, function->name, length - 1);
+			memcpy(data + length - 1, "<", 1);
+			data[length] = '\0';
+			string = takeString(data, length);
+		}
+		break;
+	}
+	case OBJ_CLASS:
+		string = AS_CLASS(value)->name;
+		break;
+	case OBJ_INSTANCE: {
+		ObjInstance* instance = AS_INSTANCE(value);
+		int length = instance->cls->name->length + 9;
+		char* data = ALLOCATE(char, length);
+		memcpy(data, instance->cls->name->data, length - 9);
+		memcpy(data + length - 9, " instance", 9);
+		data[length] = '\0';
+		string = takeString(data, length);
+		break;
+	}
+	default:
+		break; // TODO need internal error logic
+	}
+	return string;
+}
 
 uint32_t hashString(const char* key, int length) {
 	uint32_t hash = INITIAL_HASH;

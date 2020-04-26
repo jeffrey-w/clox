@@ -96,6 +96,7 @@ typedef struct {
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
+ObjString* toString(Value);
 ObjUpvalue* newUpvalue(Value*);
 ObjNative* newNative(NativeFn);
 ObjFunction* newFunction();
