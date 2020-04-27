@@ -18,6 +18,7 @@ static char* printType(ObjType);
 static void printFunction(ObjFunction*);
 static uint32_t hashString(const char*, int);
 static ObjString* allocateString(char*, int, uint32_t);
+static ObjString* functionToString(ObjFunction*);
 
 Obj* allocateObject(size_t size, ObjType type) {
 	Obj* object = (Obj*)reallocate(NULL, 0, size);
@@ -112,6 +113,26 @@ ObjString* takeString(char* string, int length) {
 	return allocateString(string, length, hash);
 }
 
+uint32_t hashString(const char* key, int length) {
+	uint32_t hash = INITIAL_HASH;
+	for (int i = 0; i < length; i++) {
+		hash ^= key[i];
+		hash *= HASH_SCALE;
+	}
+	return hash;
+}
+
+ObjString* allocateString(char* data, int length, uint32_t hash) {
+	ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+	string->length = length;
+	string->data = data;
+	string->hash = hash;
+	push(OBJ_VAL(string));
+	tableSet(&vm.strings, string, NIL_VAL);
+	pop();
+	return string;
+}
+
 ObjString* toString(Value value) {
 	ObjString* string = NULL;
 	switch (OBJ_TYPE(value)) {
@@ -134,18 +155,7 @@ ObjString* toString(Value value) {
 		else {
 			function = AS_BOUND_METHOD(value)->method->function;
 		}
-		if (!function->name) {
-			string = takeString("<script>", 8);
-		}
-		else {
-			int length = function->name->length + 5;
-			char* data = ALLOCATE(char, length);
-			memcpy(data, "<fn ", 4);
-			memcpy(data + 4, function->name, length - 1);
-			memcpy(data + length - 1, "<", 1);
-			data[length] = '\0';
-			string = takeString(data, length);
-		}
+		string = functionToString(function);
 		break;
 	}
 	case OBJ_CLASS:
@@ -154,7 +164,7 @@ ObjString* toString(Value value) {
 	case OBJ_INSTANCE: {
 		ObjInstance* instance = AS_INSTANCE(value);
 		int length = instance->cls->name->length + 9;
-		char* data = ALLOCATE(char, length);
+		char* data = ALLOCATE(char, length + 1);
 		memcpy(data, instance->cls->name->data, length - 9);
 		memcpy(data + length - 9, " instance", 9);
 		data[length] = '\0';
@@ -167,23 +177,20 @@ ObjString* toString(Value value) {
 	return string;
 }
 
-uint32_t hashString(const char* key, int length) {
-	uint32_t hash = INITIAL_HASH;
-	for (int i = 0; i < length; i++) {
-		hash ^= key[i];
-		hash *= HASH_SCALE;
+ObjString* functionToString(ObjFunction* function) {
+	ObjString* string = NULL;
+	if (!function->name) {
+		string = takeString("<script>", 8);
 	}
-	return hash;
-}
-
-ObjString* allocateString(char* data, int length, uint32_t hash) {
-	ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
-	string->length = length;
-	string->data = data;
-	string->hash = hash;
-	push(OBJ_VAL(string));
-	tableSet(&vm.strings, string, NIL_VAL);
-	pop();
+	else {
+		int length = function->name->length + 5;
+		char* data = ALLOCATE(char, length + 1);
+		memcpy(data, "<fn ", 4);
+		memcpy(data + 4, function->name->data, length - 1);
+		memcpy(data + length - 1, ">", 1);
+		data[length] = '\0';
+		string = takeString(data, length);
+	}
 	return string;
 }
 
