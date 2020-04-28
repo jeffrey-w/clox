@@ -16,6 +16,7 @@
 static Obj* allocateObject(size_t, ObjType);
 static char* printType(ObjType);
 static void printFunction(ObjFunction*);
+static void printArray(ObjArray*);
 static uint32_t hashString(const char*, int);
 static ObjString* allocateString(char*, int, uint32_t);
 static ObjString* functionToString(ObjFunction*);
@@ -50,6 +51,8 @@ char* printType(ObjType type) {
 		return "bound method";
 	case OBJ_INSTANCE:
 		return "instance";
+	case OBJ_ARRAY:
+		return "array";
 	default:
 		return "unknown object";
 	}
@@ -78,6 +81,10 @@ void printObject(Value value) {
 	case OBJ_INSTANCE:
 		printf("%s instance", AS_INSTANCE(value)->cls->name->data);
 		break;
+	case OBJ_ARRAY: {
+		printArray(AS_ARRAY(value));
+		break;
+	}
 	default:
 		break; // TODO need internal error logic
 	}
@@ -89,6 +96,24 @@ void printFunction(ObjFunction* function) {
 		return;
 	}
 	printf("<fn %s>", function->name->data);
+}
+
+void printArray(ObjArray* array) {
+	printf("{");
+	if (array->count > 5) {
+		printValue(array->values[0]);
+		printf(", ... , ");
+		printValue(array->values[array->count - 1]);
+	}
+	else {
+		for (int i = 0; i < array->count; i++) {
+			printValue(array->values[i]);
+			if (i < array->count - 1) {
+				printf(", ");
+			}
+		}
+	}
+	printf("}");
 }
 
 ObjString* copyString(const char* string, int length) {
@@ -133,7 +158,7 @@ ObjString* allocateString(char* data, int length, uint32_t hash) {
 	return string;
 }
 
-ObjString* toString(Value value) {
+ObjString* objectToString(Value value) {
 	ObjString* string = NULL;
 	switch (OBJ_TYPE(value)) {
 	case OBJ_STRING:
@@ -145,7 +170,7 @@ ObjString* toString(Value value) {
 	case OBJ_FUNCTION:
 	case OBJ_CLOSURE:
 	case OBJ_BOUND_METHOD: {
-		ObjFunction * function;
+		ObjFunction* function;
 		if (IS_FUNCTION(value)) {
 			function = AS_FUNCTION(value);
 		}
@@ -169,6 +194,35 @@ ObjString* toString(Value value) {
 		memcpy(data + length - 9, " instance", 9);
 		data[length] = '\0';
 		string = takeString(data, length);
+		break;
+	}
+	case OBJ_ARRAY: {
+		int size = 0, len = 1;
+		char* data = ALLOCATE(char, 8);
+		ObjArray* array = AS_ARRAY(value);
+		ObjString* rep = NULL;
+		memcpy(data, "{", len);
+		for (int i = 0; i < array->count; i++) {
+			rep = valueToString(array->values[i]);
+			while (size < len + rep->length + 2) {
+				int old = size;
+				size = GROW_CAPACITY(old);
+				data = GROW_ARRAY(data, char, old, size);
+			}
+			memcpy(data + len, rep->data, rep->length);
+			len += rep->length;
+			if (i < array->count - 1) {
+				memcpy(data + len++, ", ", 1);
+			}
+		}
+		if (size < len + 2) {
+			int old = size;
+			size = GROW_CAPACITY(old);
+			data = GROW_ARRAY(data, char, old, size);
+		}
+		memcpy(data + len++, "}", 1);
+		data[len] = '\0';
+		string = takeString(data, len);
 		break;
 	}
 	default:
@@ -248,4 +302,12 @@ ObjInstance* newInstance(ObjClass* cls) {
 	instance->cls = cls;
 	initTable(&instance->fields);
 	return instance;
+}
+
+ObjArray* newArray() {
+	ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+	array->count = 0;
+	array->capacity = 0;
+	array->values = NULL;
+	return array;
 }
