@@ -13,6 +13,7 @@
 #define IS_CLASS(value)         isObjType(value, OBJ_CLASS)
 #define IS_BOUND_METHOD(value)  isObjType(value, OBJ_BOUND_METHOD)
 #define IS_INSTANCE(value)      isObjType(value, OBJ_INSTANCE)
+#define IS_ARRAY(value)         isObjType(value, OBJ_ARRAY)
 #define AS_STRING(value)        ((ObjString*)AS_OBJ(value))        
 #define AS_CSTRING(value)       (AS_STRING(value)->data)
 #define AS_NATIVE(value)        (((ObjNative*)AS_OBJ(value))->function)
@@ -20,7 +21,8 @@
 #define AS_CLOSURE(value)       ((ObjClosure*)AS_OBJ(value)) 
 #define AS_CLASS(value)         ((ObjClass*)AS_OBJ(value))
 #define AS_BOUND_METHOD(value)  ((ObjBoundMethod*)AS_OBJ(value))
-#define AS_INSTANCE(value)      ((ObjInstance*)AS_OBJ(value))   
+#define AS_INSTANCE(value)      ((ObjInstance*)AS_OBJ(value))
+#define AS_ARRAY(value)         ((ObjArray*)AS_OBJ(value))
 
 typedef enum {
 	OBJ_STRING,
@@ -30,7 +32,8 @@ typedef enum {
 	OBJ_CLOSURE,
 	OBJ_CLASS,
 	OBJ_BOUND_METHOD,
-	OBJ_INSTANCE
+	OBJ_INSTANCE,
+	OBJ_ARRAY
 } ObjType;
 
 struct sObj {
@@ -93,10 +96,17 @@ typedef struct {
 	Table fields;
 } ObjInstance;
 
+typedef struct {
+	Obj obj;
+	int count;
+	int capacity;
+	Value* values;
+} ObjArray;
+
 void printObject(Value);
 ObjString* copyString(const char*, int);
 ObjString* takeString(char*, int);
-ObjString* toString(Value);
+ObjString* objectToString(Value);
 ObjUpvalue* newUpvalue(Value*);
 ObjNative* newNative(NativeFn);
 ObjFunction* newFunction();
@@ -104,6 +114,7 @@ ObjClosure* newClosure(ObjFunction*);
 ObjClass* newClass(ObjString*);
 ObjBoundMethod* newBoundMethod(Value, ObjClosure*);
 ObjInstance* newInstance(ObjClass*);
+ObjArray* newArray();
 
 static inline bool isObjType(Value value, ObjType type) {
 	return IS_OBJ(value) && AS_OBJ(value)->type == type;
