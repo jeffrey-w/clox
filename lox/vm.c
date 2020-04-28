@@ -489,9 +489,33 @@ void concatenate() {
 }
 
 bool isFalsey(Value value) {
-	return (IS_NIL(value))
-		|| (IS_NUMBER(value) && !AS_NUMBER(value))
-		|| (IS_BOOL(value) && !AS_BOOL(value));
+	switch (value.type) {
+	case VAL_BOOL:
+		return !AS_BOOL(value);
+	case VAL_NIL:
+		return true;
+	case VAL_NUMBER:
+		return !AS_NUMBER(value);
+	case VAL_OBJ: {
+		switch (AS_OBJ(value)->type) {
+		case OBJ_STRING:
+			return !strcmp(AS_CSTRING(value), "");
+		case OBJ_NATIVE:
+		case OBJ_FUNCTION:
+		case OBJ_CLOSURE:
+		case OBJ_CLASS:
+		case OBJ_BOUND_METHOD:
+		case OBJ_INSTANCE:
+			return false;
+		case OBJ_ARRAY:
+			return !AS_ARRAY(value)->count;
+		default:
+			break;
+		}
+	}
+	default:
+		return true; // TODO need internal error logic
+	}
 }
 
 ObjUpvalue* captureUpvalue(Value* local) {
