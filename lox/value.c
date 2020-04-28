@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "ryu/ryu.h"
 #include "value.h"
 
 void initValueArray(ValueArray* array) {
@@ -61,4 +62,33 @@ void printValue(Value value) {
 	default:
 		return; // TODO need internal error logic
 	}
+}
+
+ObjString* valueToString(Value value) {
+	ObjString* string = NULL;
+	switch (value.type) {
+	case VAL_BOOL:
+		if (AS_BOOL(value)) {
+			string = takeString("true", 4);
+		}
+		else {
+			string = takeString("false", 5);
+		}
+		break;
+	case VAL_NIL:
+		string = takeString("nil", 3);
+		break;
+	case VAL_NUMBER: {
+		char* data = d2s(AS_NUMBER(value));
+		string = takeString(data, strlen(data)); // TODO don't use strlen
+		break;
+	}
+	case VAL_OBJ: {
+		string = objectToString(value);
+		break;
+	}
+	default:
+		break; // TODO need internal error logic
+	}
+	return string;
 }

@@ -44,3 +44,4 @@ void freeValueArray(ValueArray*);
 void writeValueArray(ValueArray*, Value);
 bool valuesEqual(Value, Value);
 void printValue(Value);
+ObjString* valueToString(Value);
