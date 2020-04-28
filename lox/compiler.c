@@ -49,8 +49,10 @@ static void expression();
 static void parsePrecedence(Precedence);
 static ParseRule* getRule(TokenType);
 static void literal(bool);
+static uint8_t initializers();
 static void number(bool);
 static void string(bool);
+static void index(bool);
 static void call(bool);
 static uint8_t argumentList();
 static void dot(bool);
@@ -82,8 +84,10 @@ static void errorAt(Token*, const char*);
 ParseRule rules[] = {
   { grouping, call,    PREC_CALL },       // TOKEN_LEFT_PAREN
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_PAREN
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_LEFT_BRACE
+  { literal,  NULL,    PREC_NONE },       // TOKEN_LEFT_BRACE
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACE
+  { NULL,     index,   PREC_CALL },       // TOKEN_LEFT_BRACK
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACK
   { NULL,     NULL,    PREC_NONE },       // TOKEN_COMMA
   { NULL,     dot,     PREC_CALL },       // TOKEN_DOT
   { unary,    binary,  PREC_TERM },       // TOKEN_MINUS
@@ -582,6 +586,11 @@ ParseRule* getRule(TokenType type) {
 
 void literal(bool canAssign) {
 	switch (parser.previous.type) {
+	case TOKEN_LEFT_BRACE: {
+		uint8_t elements = initializers();
+		emitBytes(OP_ARRAY, elements);
+		break;
+	}
 	case TOKEN_FALSE:
 		emitByte(OP_FALSE);
 		break;
@@ -596,6 +605,22 @@ void literal(bool canAssign) {
 	}
 }
 
+uint8_t initializers() {
+	uint8_t count = 0;
+	if (!check(TOKEN_RIGHT_BRACE)) {
+		do {
+			expression();
+			if (count == PARAM_MAX) {
+				// TODO concatenate PARAM_MAX to rest of msg before passing to error
+				error("Cannot initialize an array with more than 255 elements.");
+			}
+			count++;
+		} while (match(TOKEN_COMMA));
+	}
+	consume(TOKEN_RIGHT_BRACE, "Expect '}' after array initializers.");
+	return count;
+}
+
 void number(bool canAssign) {
 	double value = strtod(parser.previous.start, NULL);
 	emitConstant(NUMBER_VAL(value));
@@ -603,6 +628,18 @@ void number(bool canAssign) {
 
 void string(bool canAssign) {
 	emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
+void index(bool canAssign) {
+	expression();
+	consume(TOKEN_RIGHT_BRACK, "Expect ']' after index.");
+	if (canAssign && match(TOKEN_EQUAL)) {
+		expression();
+		emitByte(OP_SET_INDEX);
+	}
+	else {
+		emitByte(OP_GET_INDEX);
+	}
 }
 
 void call(bool canAssign) {
@@ -616,7 +653,7 @@ uint8_t argumentList() {
 		do {
 			expression();
 			if (argCount == PARAM_MAX) {
-				// TODO concatenate PARAM_MAX to rest of msg before passing to errorAtCurrent
+				// TODO concatenate PARAM_MAX to rest of msg before passing to error
 				error("Cannot have more than 255 arguments");
 			}
 			argCount++;
