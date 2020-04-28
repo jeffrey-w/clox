@@ -9,7 +9,6 @@
 #include "debug.h"
 #include "memory.h"
 #include "natives.h"
-#include "ryu/ryu.h"
 #include "value.h"
 #include "vm.h"
 
@@ -21,7 +20,6 @@ static void initEnv();
 static void defineNative(const char*, NativeFn);
 static InterpretResult run();
 static Value peek(int);
-static void stringify(Value, int);
 static void concatenate();
 static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
@@ -190,13 +188,30 @@ InterpretResult run() {
 			break;
 		}
 		case OP_GET_PROPERTY: {
+			ObjString* name = READ_STRING();
+			if (IS_ARRAY(peek(0))) {
+				ObjArray* array = AS_ARRAY(peek(0));
+				if (!strcmp(name->data, "length")) {
+					pop(); // Array.
+					push(NUMBER_VAL(array->count));
+				}
+				else {
+					runtimeError("Arrays have no property '%s'.", name->data);
+					return INTERPRET_RUNTIME_ERROR;
+				}
+				break;
+			}
 			if (!IS_INSTANCE(peek(0))) {
 				runtimeError("Only instances have properties.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
 			ObjInstance* instance = AS_INSTANCE(peek(0));
-			ObjString* name = READ_STRING();
 			Value value;
+			if (!strcmp(name->data, "data")) {
+				if (tableGet(&instance->fields, name, &value) && IS_ARRAY(value)) {
+					return INTERPRET_RUNTIME_ERROR;
+				}
+			}
 			if (tableGet(&instance->fields, name, &value)) {
 				pop(); // Instance.
 				push(value);
@@ -217,6 +232,55 @@ InterpretResult run() {
 			Value value = pop();
 			pop();
 			push(value);
+			break;
+		}
+		case OP_GET_INDEX: {
+			if (!IS_ARRAY(peek(1))) {
+				runtimeError("Can only index into arrays.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			if (!IS_NUMBER(peek(0)) || AS_NUMBER(peek(0)) != (int)AS_NUMBER(peek(0))) {
+				runtimeError("Index must be a nonnegative integer.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			int index = (int)AS_NUMBER(peek(0));
+			ObjArray* array = AS_ARRAY(peek(1));
+			if (index < 0 || index + 1 > array->count) {
+				runtimeError("Index out of bounds: %d", index);
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			pop();
+			pop();
+			push(array->values[index]);
+			break;
+		}
+		case OP_SET_INDEX: {
+			if (!IS_ARRAY(peek(2))) {
+				runtimeError("Can only index into arrays.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			if (!IS_NUMBER(peek(1)) || AS_NUMBER(peek(1)) != (int)AS_NUMBER(peek(1))) {
+				runtimeError("Index must be a nonnegative integer.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			int index = (int)AS_NUMBER(peek(1));
+			ObjArray* array = AS_ARRAY(peek(2));
+			if (index < 0 || index > array->count) {
+				runtimeError("Index out of bounds: %d", index);
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			if (array->capacity < array->count + 1) {
+				int oldCapacity = array->capacity;
+				array->capacity = GROW_CAPACITY(oldCapacity);
+				array->values = GROW_ARRAY(array->values, Value, oldCapacity, array->capacity);
+			}
+			if (index == array->count) {
+				array->count++;
+			}
+			array->values[index] = pop();
+			pop();
+			pop();
+			push(array->values[index]);
 			break;
 		}
 		case OP_GET_SUPER: {
@@ -241,8 +305,8 @@ InterpretResult run() {
 			break;
 		case OP_ADD:
 			if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
-				stringify(peek(0), 0);
-				stringify(peek(1), 1);
+				vm.stackTop[-1] = OBJ_VAL(valueToString(peek(0)));
+				vm.stackTop[-2] = OBJ_VAL(valueToString(peek(1)));
 				concatenate();
 			}
 			else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
@@ -372,6 +436,23 @@ InterpretResult run() {
 		case OP_METHOD:
 			defineMethod(READ_STRING());
 			break;
+		case OP_ARRAY: {
+			int length = READ_BYTE();
+			ObjArray* array = newArray();
+			while (array->count < length) {
+				if (array->capacity < array->count + 1) {
+					int oldCapacity = array->capacity;
+					array->capacity = GROW_CAPACITY(oldCapacity);
+					array->values = GROW_ARRAY(array->values, Value, oldCapacity, array->capacity);
+				}
+				array->values[array->count++] = peek(length - array->count - 1);
+			}
+			for (int i = 0; i < length; i++) {
+				pop();
+			}
+			push(OBJ_VAL(array));
+			break;
+		}
 		}
 	}
 #undef READ_BYTE
@@ -391,35 +472,6 @@ Value pop() {
 
 Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
-}
-
-void stringify(Value value, int distance) {
-	ObjString* string = NULL;
-	switch (value.type) {
-	case VAL_BOOL:
-		if (AS_BOOL(value)) {
-			string = takeString("true", 4);
-		}
-		else {
-			string = takeString("false", 5);
-		}
-		break;
-	case VAL_NIL:
-		string = takeString("nil", 3);
-		break;
-	case VAL_NUMBER: {
-		char* data = d2s(AS_NUMBER(value));
-		string = takeString(data, strlen(data)); // TODO don't use strlen
-		break;
-	}
-	case VAL_OBJ: {
-		string = toString(value);
-		break;
-	}
-	default:
-		break; // TODO need internal error logic
-	}
-	vm.stackTop[-1 - distance] = OBJ_VAL(string);
 }
 
 void concatenate() {
