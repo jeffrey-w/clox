@@ -154,6 +154,13 @@ void blackenObject(Obj* object) {
 		markTable(&instance->fields);
 		break;
 	}
+	case OBJ_ARRAY: {
+		ObjArray* array = (ObjArray*)object;
+		for (int i = 0; i < array->count; i++) {
+			markValue(array->values[i]);
+		}
+		break;
+	}
 	}
 }
 
@@ -235,6 +242,11 @@ void freeObject(Obj* object) {
 		ObjInstance* instance = (ObjInstance*)object;
 		freeTable(&instance->fields);
 		FREE(ObjInstance, object);
+		break;
+	}
+	case OBJ_ARRAY: {
+		ObjArray* array = (ObjArray*)object;
+		FREE_ARRAY(Value, array->values, array->capacity);
 		break;
 	}
 	default:
