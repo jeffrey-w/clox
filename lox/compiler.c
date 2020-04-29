@@ -90,11 +90,13 @@ ParseRule rules[] = {
   { NULL,     NULL,    PREC_NONE },       // TOKEN_RIGHT_BRACK
   { NULL,     NULL,    PREC_NONE },       // TOKEN_COMMA
   { NULL,     dot,     PREC_CALL },       // TOKEN_DOT
-  { unary,    binary,  PREC_TERM },       // TOKEN_MINUS
-  { NULL,     binary,  PREC_TERM },       // TOKEN_PLUS
   { NULL,     NULL,    PREC_NONE },       // TOKEN_SEMICOLON
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_SLASH
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_STAR
+  { unary,    binary,  PREC_TERM },       // TOKEN_MINUS
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_MINUS_MINUS
+  { NULL,     binary,  PREC_TERM },       // TOKEN_PLUS
+  { NULL,     NULL,    PREC_NONE },       // TOKEN_PLUS_PLUS
   { unary,    NULL,    PREC_NONE },       // TOKEN_BANG
   { NULL,     binary,  PREC_EQUALITY },   // TOKEN_BANG_EQUAL
   { NULL,     NULL,    PREC_NONE },       // TOKEN_EQUAL
