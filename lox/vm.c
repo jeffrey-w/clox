@@ -15,6 +15,8 @@
 #define DEFAULT_PRECISION 0x10
 #define DEFAULT_NEXT_GC 0x100000
 
+ObjInstance* temp = NULL; // TODO find a better way to do this
+
 static void resetStack();
 static void initEnv();
 static void defineNative(const char*, NativeFn);
@@ -207,14 +209,12 @@ InterpretResult run() {
 			}
 			ObjInstance* instance = AS_INSTANCE(peek(0));
 			Value value;
-			if (!strcmp(name->data, "data")) {
-				if (tableGet(&instance->fields, name, &value) && IS_ARRAY(value)) {
-					return INTERPRET_RUNTIME_ERROR;
-				}
-			}
 			if (tableGet(&instance->fields, name, &value)) {
 				pop(); // Instance.
 				push(value);
+				if (*frame->ip == OP_DECREMENT || *frame->ip == OP_INCREMENT) {
+					temp = instance;
+				}
 				break;
 			}
 			if (!bindMethod(instance->cls, name)) {
@@ -337,6 +337,40 @@ InterpretResult run() {
 				return INTERPRET_RUNTIME_ERROR;
 			}
 			push(NUMBER_VAL(-AS_NUMBER(pop())));
+			break;
+		case OP_DECREMENT:
+			if (!IS_NUMBER(peek(0))) {
+				runtimeError("Operand must be a number.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			if (READ_BYTE()) {
+				if (temp) {
+					push(OBJ_VAL(temp));
+					push(peek(1));
+					temp = NULL;
+				}
+				else {
+					push(peek(0));
+				}
+			}
+			push(NUMBER_VAL(AS_NUMBER(pop()) - 1));
+			break;
+		case OP_INCREMENT:
+			if (!IS_NUMBER(peek(0))) {
+				runtimeError("Operand must be a number.");
+				return INTERPRET_RUNTIME_ERROR;
+			}
+			if (READ_BYTE()) {
+				if (temp) {
+					push(OBJ_VAL(temp));
+					push(peek(1));
+					temp = NULL;
+				}
+				else {
+					push(peek(0));
+				}
+			}
+			push(NUMBER_VAL(AS_NUMBER(pop()) + 1));
 			break;
 		case OP_PRINT:
 			printValue(pop());
