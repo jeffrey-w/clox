@@ -55,7 +55,7 @@ static void string(bool);
 static void index(bool);
 static void call(bool);
 static uint8_t argumentList();
-static void dot(bool);
+static void dot(bool); // TODO move this
 static void unary(bool);
 static void binary(bool);
 static void and_(bool);
@@ -68,6 +68,8 @@ static void namedVariable(Token, bool);
 static int resolveLocal(Compiler*, Token*);
 static int resolveUpvalue(Compiler*, Token*);
 static int addUpvalue(Compiler*, uint8_t, bool);
+static bool isAssigned(uint8_t, uint8_t, uint8_t);
+static bool isIncrement(bool*);
 static void emitByte(uint8_t);
 static void emitBytes(uint8_t, uint8_t);
 static void emitConstant(Value);
@@ -94,9 +96,9 @@ ParseRule rules[] = {
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_SLASH
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_STAR
   { unary,    binary,  PREC_TERM },       // TOKEN_MINUS
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_MINUS_MINUS
+  { variable, NULL,    PREC_TERM },       // TOKEN_MINUS_MINUS
   { NULL,     binary,  PREC_TERM },       // TOKEN_PLUS
-  { NULL,     NULL,    PREC_NONE },       // TOKEN_PLUS_PLUS
+  { variable, NULL,    PREC_TERM },       // TOKEN_PLUS_PLUS
   { unary,    NULL,    PREC_NONE },       // TOKEN_BANG
   { NULL,     binary,  PREC_EQUALITY },   // TOKEN_BANG_EQUAL
   { NULL,     NULL,    PREC_NONE },       // TOKEN_EQUAL
@@ -350,7 +352,16 @@ void addLocal(Token name) {
 	local->isCaptured = false;
 }
 
-uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
+uint8_t identifierConstant(Token* name) {
+	ValueArray constants = currentChunk()->constants;
+	for (int i = 0; i < constants.count; i++) {
+		if (IS_STRING(constants.values[i])) {
+			ObjString* string = AS_STRING(constants.values[i]);
+			if (STRCMP(name->length, string->length, name->start, string->data)) {
+				return i;
+			}
+		}
+	}
 	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
@@ -668,11 +679,10 @@ uint8_t argumentList() {
 void dot(bool canAssign) {
 	consume(TOKEN_IDENTIFIER, "Expect property name after '.'.");
 	uint8_t name = identifierConstant(&parser.previous);
-	if (canAssign && match(TOKEN_EQUAL)) {
-		expression();
-		emitBytes(OP_SET_PROPERTY, name);
+	if (canAssign && isAssigned(OP_GET_PROPERTY, OP_SET_PROPERTY, name)) {
+		return;
 	}
-	else if (match(TOKEN_LEFT_PAREN)) {
+	if (match(TOKEN_LEFT_PAREN)) {
 		uint8_t argCount = argumentList();
 		emitBytes(OP_INVOKE, name);
 		emitByte(argCount);
@@ -794,8 +804,13 @@ void variable(bool canAssign) {
 }
 
 void namedVariable(Token name, bool canAssign) {
-	uint8_t getOp, setOp;
 	int arg;
+	uint8_t getOp, setOp;
+	if (name.type == TOKEN_MINUS_MINUS || name.type == TOKEN_PLUS_PLUS) {
+		if (check(TOKEN_IDENTIFIER)) {
+			name = parser.current;
+		}
+	}
 	if ((arg = resolveLocal(current, &name)) != UNINITIALIZED) {
 		getOp = OP_GET_LOCAL;
 		setOp = OP_SET_LOCAL;
@@ -809,13 +824,10 @@ void namedVariable(Token name, bool canAssign) {
 		getOp = OP_GET_GLOBAL;
 		setOp = OP_SET_GLOBAL;
 	}
-	if (canAssign && match(TOKEN_EQUAL)) {
-		expression();
-		emitBytes(setOp, (uint8_t)arg);
+	if (canAssign && isAssigned(getOp, setOp, arg)) {
+		return;
 	}
-	else {
-		emitBytes(getOp, (uint8_t)arg);
-	}
+	emitBytes(getOp, (uint8_t)arg);
 }
 
 int resolveLocal(Compiler* compiler, Token* name) {
@@ -863,6 +875,38 @@ int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
 	compiler->upvalues[upvalueCount].isLocal = isLocal;
 	compiler->upvalues[upvalueCount].index = index;
 	return compiler->function->upvalueCount++;
+}
+
+bool isAssigned(uint8_t getOp, uint8_t setOp, uint8_t arg) {
+	bool postfix;
+	if (match(TOKEN_EQUAL)) {
+		expression();
+		emitBytes(setOp, arg);
+		return true;
+	}
+	else if (isIncrement(&postfix)) {
+		emitBytes(getOp, arg);
+		emitBytes(parser.previous.type == TOKEN_MINUS_MINUS
+			? OP_DECREMENT : OP_INCREMENT, (uint8_t)postfix);
+		emitBytes(setOp, arg);
+		if (postfix) {
+			emitByte(OP_POP);
+		}
+		else {
+			consume(TOKEN_IDENTIFIER, "Expect identifier after prefix operator.");
+		}
+		return true;
+	}
+	return false;
+}
+
+bool isIncrement(bool* postfix) {
+	TokenType type = parser.previous.type;
+	if (type == TOKEN_MINUS_MINUS || type == TOKEN_PLUS_PLUS) {
+		*postfix = false;
+		return true;
+	}
+	return (*postfix = match(TOKEN_MINUS_MINUS) || match(TOKEN_PLUS_PLUS));
 }
 
 void emitByte(uint8_t byte) {
