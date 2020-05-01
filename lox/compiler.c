@@ -349,7 +349,16 @@ void addLocal(Token name) {
 	local->isCaptured = false;
 }
 
-uint8_t identifierConstant(Token* name) { // TODO optimize this so that previously added strings are not reinserted into the constant table
+uint8_t identifierConstant(Token* name) {
+	ValueArray constants = currentChunk()->constants;
+	for (int i = 0; i < constants.count; i++) {
+		if (IS_STRING(constants.values[i])) {
+			ObjString* string = AS_STRING(constants.values[i]);
+			if (name->length == string->length && !memcmp(name->start, string->data, name->length)) {
+				return i;
+			}
+		}
+	}
 	return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
