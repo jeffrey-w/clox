@@ -95,6 +95,7 @@ ParseRule rules[] = {
   { NULL,     NULL,    PREC_NONE },       // TOKEN_SEMICOLON
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_SLASH
   { NULL,     binary,  PREC_FACTOR },     // TOKEN_STAR
+  { NULL,     binary,  PREC_EXPONENT },   // TOKEN_STAR_STAR
   { unary,    NULL,    PREC_NONE },       // TOKEN_BANG
   { NULL,     binary,  PREC_EQUALITY },   // TOKEN_BANG_EQUAL
   { NULL,     NULL,    PREC_NONE },       // TOKEN_EQUAL
@@ -726,6 +727,9 @@ void binary(bool canAssign) {
 		break;
 	case TOKEN_STAR:
 		emitByte(OP_MULTIPLY);
+		break;
+	case TOKEN_STAR_STAR:
+		emitByte(OP_EXPONENTIATE);
 		break;
 	case TOKEN_SLASH:
 		emitByte(OP_DIVIDE);
