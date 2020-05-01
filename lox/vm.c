@@ -12,7 +12,6 @@
 #include "value.h"
 #include "vm.h"
 
-#define DEFAULT_PRECISION 0x10
 #define DEFAULT_NEXT_GC 0x100000
 
 static void resetStack();
