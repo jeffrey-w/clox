@@ -45,3 +45,4 @@ void writeValueArray(ValueArray*, Value);
 bool valuesEqual(Value, Value);
 void printValue(Value);
 ObjString* valueToString(Value);
+bool isInteger(Value);

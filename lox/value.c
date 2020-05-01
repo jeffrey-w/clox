@@ -81,7 +81,11 @@ ObjString* valueToString(Value value) {
 		string = takeString("nil", 3);
 		break;
 	case VAL_NUMBER: {
-		char* data = d2s(AS_NUMBER(value));
+		uint32_t precision = 0;
+		if (!isInteger(value)) {
+			precision = DBL_DIG;
+		}
+		char* data = d2fixed(AS_NUMBER(value), precision);
 		string = takeString(data, strlen(data)); // TODO don't use strlen
 		break;
 	}
@@ -93,4 +97,14 @@ ObjString* valueToString(Value value) {
 		break; // TODO need internal error logic
 	}
 	return string;
+}
+
+bool isInteger(Value value) {
+	if (IS_NUMBER(value)) {
+		double d = AS_NUMBER(value);
+		if (isfinite(d)) {
+			return floor(fabs(d)) == fabs(d);
+		}
+	}
+	return false;
 }
