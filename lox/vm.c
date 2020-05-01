@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,7 +18,6 @@ static void initEnv();
 static void defineNative(const char*, NativeFn);
 static InterpretResult run();
 static Value peek(int);
-static bool validIndex(Value);
 static void concatenate();
 static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
@@ -233,7 +231,7 @@ InterpretResult run() {
 				runtimeError("Can only index into arrays.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
-			if (!validIndex(peek(0))) {
+			if (!isInteger(peek(0))) {
 				runtimeError("Index must be a nonnegative integer.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
@@ -253,7 +251,7 @@ InterpretResult run() {
 				runtimeError("Can only index into arrays.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
-			if (!validIndex(peek(1))) {
+			if (!isInteger(peek(1))) {
 				runtimeError("Index must be a nonnegative integer.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
@@ -475,16 +473,6 @@ Value pop() {
 
 Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
-}
-
-bool validIndex(Value value) {
-	if (IS_NUMBER(value)) {
-		double d = AS_NUMBER(value);
-		if (isfinite(d)) {
-			return floor(fabs(d)) == fabs(d);
-		}
-	}
-	return false;
 }
 
 void concatenate() {
