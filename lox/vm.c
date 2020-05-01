@@ -20,6 +20,7 @@ static void initEnv();
 static void defineNative(const char*, NativeFn);
 static InterpretResult run();
 static Value peek(int);
+static bool validIndex(Value);
 static void concatenate();
 static bool isFalsey(Value);
 static ObjUpvalue* captureUpvalue(Value*);
@@ -189,14 +190,13 @@ InterpretResult run() {
 		}
 		case OP_GET_PROPERTY: {
 			ObjString* name = READ_STRING();
-			if (IS_ARRAY(peek(0))) {
-				ObjArray* array = AS_ARRAY(peek(0));
+			if (IS_STRING(peek(0)) || IS_ARRAY(peek(0))) {
 				if (!strcmp(name->data, "length")) {
-					pop(); // Array.
-					push(NUMBER_VAL(array->count));
+					Value obj = pop(); // Obj.
+					push(NUMBER_VAL(IS_STRING(obj) ? AS_STRING(obj)->length : AS_ARRAY(obj)->count));
 				}
 				else {
-					runtimeError("Arrays have no property '%s'.", name->data);
+					runtimeError("%s have no property '%s'.", IS_STRING(peek(0)) ? "Strings" : "Arrays", name->data);
 					return INTERPRET_RUNTIME_ERROR;
 				}
 				break;
@@ -207,11 +207,6 @@ InterpretResult run() {
 			}
 			ObjInstance* instance = AS_INSTANCE(peek(0));
 			Value value;
-			if (!strcmp(name->data, "data")) {
-				if (tableGet(&instance->fields, name, &value) && IS_ARRAY(value)) {
-					return INTERPRET_RUNTIME_ERROR;
-				}
-			}
 			if (tableGet(&instance->fields, name, &value)) {
 				pop(); // Instance.
 				push(value);
@@ -239,7 +234,7 @@ InterpretResult run() {
 				runtimeError("Can only index into arrays.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
-			if (!IS_NUMBER(peek(0)) || AS_NUMBER(peek(0)) != (int)AS_NUMBER(peek(0))) {
+			if (!validIndex(peek(0))) {
 				runtimeError("Index must be a nonnegative integer.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
@@ -259,7 +254,7 @@ InterpretResult run() {
 				runtimeError("Can only index into arrays.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
-			if (!IS_NUMBER(peek(1)) || AS_NUMBER(peek(1)) != (int)AS_NUMBER(peek(1))) {
+			if (!validIndex(peek(1))) {
 				runtimeError("Index must be a nonnegative integer.");
 				return INTERPRET_RUNTIME_ERROR;
 			}
@@ -481,6 +476,16 @@ Value pop() {
 
 Value peek(int distance) {
 	return vm.stackTop[-1 - distance];
+}
+
+bool validIndex(Value value) {
+	if (IS_NUMBER(value)) {
+		double d = AS_NUMBER(value);
+		if (isfinite(d)) {
+			return floor(fabs(d)) == fabs(d);
+		}
+	}
+	return false;
 }
 
 void concatenate() {
