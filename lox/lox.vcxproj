@@ -146,7 +146,6 @@
     <ClCompile Include="natives.c" />
     <ClCompile Include="object.c" />
     <ClCompile Include="ryu\d2fixed.c" />
-    <ClCompile Include="ryu\d2s.c" />
     <ClCompile Include="scanner.c" />
     <ClCompile Include="table.c" />
     <ClCompile Include="value.c" />
@@ -162,9 +161,7 @@
     <ClInclude Include="object.h" />
     <ClInclude Include="ryu\common.h" />
     <ClInclude Include="ryu\d2fixed_full_table.h" />
-    <ClInclude Include="ryu\d2s_full_table.h" />
     <ClInclude Include="ryu\d2s_intrinsics.h" />
-    <ClInclude Include="ryu\d2s_small_table.h" />
     <ClInclude Include="ryu\digit_table.h" />
     <ClInclude Include="ryu\ryu.h" />
     <ClInclude Include="scanner.h" />
