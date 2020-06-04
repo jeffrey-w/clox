@@ -11,7 +11,7 @@
 #include "debug.h"
 #endif // DEBUG_LOG_GC
 
-#define GC_HEAP_GROWTH_FACTOR 2
+#define GC_HEAP_SHIFT 1
 
 static void markRoots();
 static void traceReferences();
@@ -48,7 +48,7 @@ void collectGarbage() {
 	traceReferences();
 	tableRemoveWhite(&vm.strings);
 	sweep();
-	vm.nextGC = vm.bytesAllocated * GC_HEAP_GROWTH_FACTOR;
+	vm.nextGC = vm.bytesAllocated << GC_HEAP_SHIFT;
 #ifdef DEBUG_LOG_GC
 	printf("-- gc end\n");
 	printf("   collect %ld bytes (from %ld to %ld) next at %ld\n", before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
@@ -103,7 +103,7 @@ void markObject(Obj* object) {
 }
 
 void traceReferences() {
-	while (vm.grayCount > 0) {
+	while (vm.grayCount) {
 		Obj* object = vm.grayStack[--vm.grayCount];
 		blackenObject(object);
 	}
