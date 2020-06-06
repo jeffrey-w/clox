@@ -1,14 +1,10 @@
 # Build Instructions
 
-Lox is built with CMake.
+Lox may be built from the command line using CMake.
 
-In your console, navigate to the directory in which you want your build files to be generated, or create it using `mkdir`.
-
-Type in the following commands:
+Navigate to your desired output directory, and enter the following commands:
 
 ```
 cmake -G "Unix Makefiles" <relative path to CMakeLists.txt>
 cmake --build . --target lox
 ```
-
-The executable binary file will be located at the current directory.
