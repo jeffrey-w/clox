@@ -1,3 +1,7 @@
+# Lox
+
+cLox is a high-level programming language supporting paradigms such as object-oriented and functional programming. It is an implmentation of [this link](http://craftinginterpreters.com/) in C.
+
 # Build Instructions
 
 Lox may be built from the command line using CMake.
