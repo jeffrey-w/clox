@@ -212,7 +212,7 @@ ObjString* objectToString(Value value) {
 			memcpy(data + len, rep->data, rep->length);
 			len += rep->length;
 			if (i < array->count - 1) {
-				memcpy(data + len++, ", ", 1);
+				memcpy(data + len++, ", ", 1); // TODO need 2 characters not 1
 			}
 		}
 		if (size < len + 2) {
