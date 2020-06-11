@@ -17,4 +17,5 @@ add_executable(lox
 if (UNIX AND NOT APPLE)
     target_link_libraries(lox PRIVATE m)
 endif ()
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug) # TODO switch this dynamically
+install(TARGETS lox DESTINATION bin)
