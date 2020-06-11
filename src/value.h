@@ -5,7 +5,7 @@
 typedef struct sObj Obj;
 typedef struct sObjString ObjString;
 
-#ifdef NAN_BOXIN
+#ifdef NAN_BOXING
 
 #define SIGN_BIT          ((uint64_t)0x8000000000000000)
 #define QNAN              ((uint64_t)0x7ffc000000000000)
