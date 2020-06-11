@@ -10,6 +10,7 @@
 //#define DEBUG_LOG_GC
 //#define DEBUG_DIAG_TOOLS
 #define UINT8_COUNT (UINT8_MAX + 1)
+#define NAN_BOXING
 
 // TODO use consistent NULL/0 check in control expressions
 // TODO hoist "private" globals to implementation files
