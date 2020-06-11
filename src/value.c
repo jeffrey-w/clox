@@ -61,6 +61,7 @@ bool cmpNumber(Value a, Value b) {
         return false;
     }
     return fabs(AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
+}
 
 void printValue(Value value) {
     if (IS_BOOL(value)) {                       
@@ -77,6 +78,7 @@ void printValue(Value value) {
     }
     else {
         return; // TODO need internal error logic
+    }
 }
 
 ObjString* valueToString(Value value) {
@@ -88,6 +90,7 @@ ObjString* valueToString(Value value) {
         else {
             string = takeString("false", 5);
         }
+    }
     else if (IS_NIL(value)) {
         string = takeString("nil", 3);
     }
