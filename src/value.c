@@ -8,6 +8,8 @@
 #include "ryu/ryu.h"
 #include "value.h"
 
+static bool cmpNumber(Value, Value);
+
 void initValueArray(ValueArray* array) {
 	array->capacity = 0;
 	array->count = 0;
@@ -29,6 +31,12 @@ void writeValueArray(ValueArray* array, Value value) {
 }
 
 bool valuesEqual(Value a, Value b) {
+#ifdef NAN_BOXING
+    if (IS_NUMBER(a) && IS_NUMBER(b)) {
+        return cmpNumber(a, b);
+    }
+    return a == b;
+#else
 	if (a.type != b.type) {
 		return false;
 	}
@@ -38,65 +46,63 @@ bool valuesEqual(Value a, Value b) {
 	case VAL_NIL:
 		return true;
 	case VAL_NUMBER:
-		return fabs(AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
+		return cmpNumber(a, b);
 	case VAL_OBJ: {
 		return AS_OBJ(a) == AS_OBJ(b);
 	}
-	default:
+	default:s
 		return false; // TODO need internal error logic
 	}
+#endif
 }
 
+bool cmpNumber(Value a, Value b) {
+    if (isnan(AS_NUMBER(a))) {
+        return false;
+    }
+    return fabs(AS_NUMBER(a) - AS_NUMBER(b)) < DBL_EPSILON;
+
 void printValue(Value value) {
-	switch (value.type) {
-	case VAL_BOOL:
-		printf(AS_BOOL(value) ? "true" : "false");
-		break;
-	case VAL_NIL:
-		printf("nil");
-		break;
-	case VAL_NUMBER:
-		printf("%g", AS_NUMBER(value));
-		break;
-	case VAL_OBJ:
-		printObject(value);
-		break;
-	default:
-		return; // TODO need internal error logic
-	}
+    if (IS_BOOL(value)) {                       
+        printf(AS_BOOL(value) ? "true" : "false");
+    }
+    else if (IS_NIL(value)) {                 
+        printf("nil");                            
+    }
+    else if (IS_NUMBER(value)) {              
+        printf("%g", AS_NUMBER(value));           
+    }
+    else if (IS_OBJ(value)) {                 
+        printObject(value);                       
+    }
+    else {
+        return; // TODO need internal error logic
 }
 
 ObjString* valueToString(Value value) {
 	ObjString* string = NULL;
-	switch (value.type) {
-	case VAL_BOOL:
-		if (AS_BOOL(value)) {
-			string = takeString("true", 4);
-		}
-		else {
-			string = takeString("false", 5);
-		}
-		break;
-	case VAL_NIL:
-		string = takeString("nil", 3);
-		break;
-	case VAL_NUMBER: {
-		uint32_t precision = 0;
-		if (!isInteger(value)) {
-			precision = DBL_DIG;
-		}
-		char* data = d2fixed(AS_NUMBER(value), precision);
-		string = takeString(data, strlen(data)); // TODO don't use strlen
-		break;
-	}
-	case VAL_OBJ: {
-		string = objectToString(value);
-		break;
-	}
-	default:
-		break; // TODO need internal error logic
-	}
-	return string;
+    if (IS_BOOL(value)) {
+        if (AS_BOOL(value)) {
+            string = takeString("true", 4);
+        }
+        else {
+            string = takeString("false", 5);
+        }
+    else if (IS_NIL(value)) {
+        string = takeString("nil", 3);
+    }
+    else if (IS_NUMBER(value)) {
+        uint32_t precision = 0;
+        if (!isInteger(value)) {
+            precision = DBL_DIG; // TODO find better method to calculate precision
+        }
+        char* data = d2fixed(AS_NUMBER(value), precision);
+        string = takeString(data, strlen(data)); // TODO don't use strlen
+    }
+    else if (IS_OBJ(value)) {
+        string = objectToString(value);
+    }
+    return string;
 }
 
 bool isInteger(Value value) {
