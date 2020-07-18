@@ -18,7 +18,7 @@ Lox may be built from the command line using CMake.
 First, clone this repository:
 
 ```
-git clonehttps://github.com/jeffrey-w/clox.git
+git clone https://github.com/jeffrey-w/clox.git
 cd clox
 ```
 
