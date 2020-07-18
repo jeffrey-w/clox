@@ -14,8 +14,7 @@ add_executable(lox
     value.c
     vm.c
 )
-if (UNIX AND NOT APPLE)
+if (NOT MSVC)
     target_link_libraries(lox PRIVATE m)
 endif ()
-set(CMAKE_BUILD_TYPE Debug) # TODO switch this dynamically
 install(TARGETS lox DESTINATION bin)
