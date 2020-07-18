@@ -490,7 +490,7 @@ void concatenate() {
 	push(OBJ_VAL(string));
 }
 
-bool isFalsey(Value value) {
+bool isFalsey(Value value) { // TODO move this to value.c
     if (IS_BOOL(value)) {
         return !AS_BOOL(value);
     }
