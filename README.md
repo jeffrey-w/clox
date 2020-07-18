@@ -15,9 +15,18 @@ Some additional features not implemented by the previously referenced standard i
 
 Lox may be built from the command line using CMake.
 
-Navigate to your desired output directory and enter the following commands:
+First, clone this repository:
 
 ```
+git clonehttps://github.com/jeffrey-w/clox.git
+cd clox
+```
+
+Then enter the following commands:
+
+```
+mkdir bin
+cd bin
 cmake -G [desired build files] <relative path to CMakeLists.txt>
 cmake --build . --target lox
 ```
