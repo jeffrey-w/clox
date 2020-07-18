@@ -27,6 +27,6 @@ Then enter the following commands:
 ```
 mkdir bin
 cd bin
-cmake -G [desired build files] <relative path to CMakeLists.txt>
+cmake -G [desired build files] ../src/CMakeLists.txt
 cmake --build . --target lox
 ```
