@@ -284,6 +284,22 @@ InterpretResult run() {
 			}
 			break;
 		}
+        case OP_TYPEOF: {
+            Value value = pop();
+            if (IS_BOOL(value)) {
+                printf("Boolean\n");
+            }
+            else if (IS_NIL(value)) {
+                printf("Nil\n");
+            }
+            else if (IS_NUMBER(value)) {
+                printf("Number\n");
+            }
+            else {
+                printf("Object\n");
+            }
+            break;
+        }
 		case OP_EQUAL: {
 			Value b = pop();
 			Value a = pop();
