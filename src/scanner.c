@@ -9,7 +9,7 @@ static bool isAtEnd();
 static Token makeToken(TokenType);
 static Token errorToken(const char*);
 static Token identifier();
-static TokenType indentifierType();
+static TokenType identifierType();
 static TokenType checkKeyword(int, int, const char*, TokenType);
 static Token number();
 static Token string();
@@ -135,10 +135,10 @@ Token identifier() {
 	while (isAlpha(peek()) || isDigit(peek())) {
 		advance();
 	}
-	return makeToken(indentifierType());
+	return makeToken(identifierType());
 }
 
-TokenType indentifierType() {
+TokenType identifierType() {
 	switch (scanner.start[0]) {
 	case 'a':
 		return checkKeyword(1, 2, "nd", TOKEN_AND);
@@ -172,6 +172,7 @@ TokenType indentifierType() {
 			switch (scanner.start[1]) {
 			case 'h': return checkKeyword(2, 2, "is", TOKEN_THIS);
 			case 'r': return checkKeyword(2, 2, "ue", TOKEN_TRUE);
+            case 'y': return checkKeyword(2, 4, "peof", TOKEN_TYPEOF);
 			}
 		}
 		break;
