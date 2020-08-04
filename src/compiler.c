@@ -38,6 +38,7 @@ static void ifStatement();
 static void whileStatement();
 static void forStatement();
 static void patchJump(int offset);
+static void typeofStatement();
 static void block();
 static void beginScope();
 static void endScope();
@@ -393,6 +394,9 @@ void statement() {
 	else if (match(TOKEN_FOR)) {
 		forStatement();
 	}
+    else if (match(TOKEN_TYPEOF)) {
+        typeofStatement();
+    }
 	else if (match(TOKEN_LEFT_BRACE)) {
 		beginScope();
 		block();
@@ -501,6 +505,12 @@ void patchJump(int offset) {
 	}
 	currentChunk()->code[offset] = (jump >> 8) & 0xff;
 	currentChunk()->code[offset + 1] = jump & 0xff;
+}
+
+void typeofStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+    emitByte(OP_TYPEOF);
 }
 
 void block() {
