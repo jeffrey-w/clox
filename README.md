@@ -2,7 +2,7 @@
 
 Lox is a high-level programming language supporting the functional and object-oriented paradigms, and is memory managed. It is an implmentation of the language described [here](http://craftinginterpreters.com/) written in C.
 
-Lox boasts very few features and an almost non-existant standard library. It may be best described as an austere ECMAscript.
+Lox boasts very few features and an almost non-existent standard library. It may be best described as an austere ECMAscript.
 
 Some additional features not implemented by the previously referenced standard include:
 
