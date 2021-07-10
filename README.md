@@ -9,6 +9,7 @@ Some additional features not implemented by the previously referenced standard i
 * Arrays
 * Native exponentiation
 * String concatenation with other native types
+* Python-like variable type determination (in progress)
 * Pre- and post-increment/decrement operators (in progress)
 
 # Build Instructions
