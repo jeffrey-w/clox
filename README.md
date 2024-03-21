@@ -4,7 +4,7 @@ Lox is a high-level programming language supporting the functional and object-or
 
 Lox boasts very few features and an almost non-existent standard library. It may be best described as an austere ECMAscript.
 
-Some additional features not implemented by the previously referenced standard include:
+Some additional features not implemented by the previously mentioned reference include:
 
 * Arrays
 * Native exponentiation
